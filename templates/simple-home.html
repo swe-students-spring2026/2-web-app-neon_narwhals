@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=393, initial-scale=1.0" />
+  <title>MealPrep – Home</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: #ffffff;
+      color: #000000;
+      width: 393px;
+      min-height: 852px;
+      font-size: 14px;
+    }
+
+    /* Status bar placeholder */
+    .status-bar {
+      height: 50px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      font-size: 12px;
+      justify-content: space-between;
+    }
+
+    /* Page header */
+    .page-header {
+      text-align: center;
+      padding: 12px 0 16px 0;
+      font-size: 18px;
+      font-weight: 600;
+      border-bottom: 1px solid #000;
+    }
+
+    .content {
+      padding: 20px 24px;
+    }
+
+    /* Section title */
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #000;
+      margin: 16px 0;
+    }
+
+    /* Week banner */
+    .week-banner {
+      border: 1px solid #000;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .week-banner-label {
+      font-size: 12px;
+    }
+
+    .week-banner-date {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Day strip */
+    .day-strip {
+      display: flex;
+      gap: 0;
+      border: 1px solid #000;
+      margin-bottom: 16px;
+    }
+
+    .day-cell {
+      flex: 1;
+      text-align: center;
+      padding: 8px 2px;
+      border-right: 1px solid #000;
+      font-size: 11px;
+      text-decoration: none;
+      color: #000;
+      display: block;
+    }
+
+    .day-cell:last-child {
+      border-right: none;
+    }
+
+    .day-cell.today {
+      background: #000;
+      color: #fff;
+    }
+
+    .day-cell .day-name {
+      font-weight: 600;
+      font-size: 10px;
+    }
+
+    .day-cell .day-num {
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    /* Grocery section */
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid #ccc;
+      font-size: 13px;
+    }
+
+    .item-row:last-child {
+      border-bottom: none;
+    }
+
+    .item-label {
+      flex: 1;
+    }
+
+    .item-amount {
+      width: 60px;
+      text-align: right;
+    }
+
+    .item-category {
+      width: 60px;
+      text-align: center;
+      font-size: 11px;
+    }
+
+    /* Buttons */
+    .btn-black {
+      display: block;
+      width: 100%;
+      background: #000;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      font-size: 14px;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 10px;
+      font-family: inherit;
+      text-decoration: none;
+    }
+
+    .btn-outline {
+      display: block;
+      width: 100%;
+      background: #fff;
+      color: #000;
+      border: 1px solid #000;
+      padding: 12px;
+      font-size: 14px;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 10px;
+      font-family: inherit;
+      text-decoration: none;
+    }
+
+    /* Bottom nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 393px;
+      display: flex;
+      border-top: 1px solid #000;
+      background: #fff;
+      height: 60px;
+    }
+
+    .nav-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      border-right: 1px solid #000;
+      cursor: pointer;
+      text-decoration: none;
+      color: #000;
+    }
+
+    .nav-tab:last-child { border-right: none; }
+
+    .nav-tab.active {
+      background: #000;
+      color: #fff;
+    }
+
+    .alert-box {
+      border: 1px solid #000;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      font-size: 12px;
+    }
+
+    .alert-box .alert-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+
+    .empty-msg {
+      font-size: 13px;
+      color: #888;
+      font-style: italic;
+      padding: 8px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="status-bar">
+    <span>9:41</span>
+    <span>●●●</span>
+  </div>
+
+  <div class="page-header">MealPrep</div>
+
+  <div class="content" style="padding-bottom: 80px;">
+
+    <!-- Current Week -->
+    <div class="week-banner">
+      <div>
+        <div class="week-banner-label">Current Week</div>
+        <div class="week-banner-date">{{ week_label }}</div>
+      </div>
+      <div style="font-size: 12px;">{{ days_planned }} days planned</div>
+    </div>
+
+    <!-- Day Strip -->
+    <div class="day-strip">
+      {% for day in week_dates %}
+      <a href="/day/{{ day.full_name }}"
+         class="day-cell {% if day.is_today %}today{% endif %}">
+        <div class="day-name">{{ day.short_name }}</div>
+        <div class="day-num">{{ day.day_number }}</div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- 3-Day Rule -->
+    <div class="alert-box">
+      <div class="alert-title">3-Day Rule</div>
+      {{ stale_text }}
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Grocery list preview -->
+    <div class="section-title">Grocery List – {{ week_grocery_label }}</div>
+
+    <div style="margin-bottom: 16px;">
+      {% if grocery_items %}
+      <!-- Header row -->
+      <div class="item-row" style="font-weight: 700; border-bottom: 1px solid #000;">
+        <div class="item-label">Food Item</div>
+        <div class="item-category">Category</div>
+        <div class="item-amount">Amount</div>
+      </div>
+
+      {% for food in grocery_items[:3] %}
+      <div class="item-row">
+        <div class="item-label">{{ food.name | title }}</div>
+        <div class="item-category">{{ food.food_type | title }}</div>
+        <div class="item-amount">{{ food.food_amount }}{{ food.food_unit }}</div>
+      </div>
+      {% endfor %}
+
+      {% if grocery_items | length > 3 %}
+      <div class="item-row" style="font-size:12px; color:#555; border-bottom:none;">
+        + {{ grocery_items | length - 3 }} more item{{ 's' if (grocery_items | length - 3) != 1 else '' }}
+      </div>
+      {% endif %}
+
+      {% else %}
+      <p class="empty-msg">No grocery items yet.</p>
+      {% endif %}
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Actions -->
+    <a href="/grocery/new" class="btn-black">+ New Grocery List</a>
+    <a href="/week"        class="btn-outline">View This Week</a>
+    <a href="/day/{{ today_weekday }}" class="btn-outline">View Today</a>
+
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a href="/"    class="nav-tab active">Home</a>
+    <a href="/week" class="nav-tab">Week</a>
+    <a href="/day/{{ today_weekday }}" class="nav-tab">Day</a>
+  </nav>
+
+</body>
+</html>
