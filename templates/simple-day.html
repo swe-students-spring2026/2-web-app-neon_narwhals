@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=393, initial-scale=1.0" />
+  <title>MealPrep – Day</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: #ffffff;
+      color: #000000;
+      width: 393px;
+      min-height: 852px;
+      font-size: 14px;
+    }
+
+    .status-bar {
+      height: 50px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      font-size: 12px;
+      justify-content: space-between;
+    }
+
+    .page-header {
+      text-align: center;
+      padding: 12px 0 16px 0;
+      font-size: 18px;
+      font-weight: 600;
+      border-bottom: 1px solid #000;
+    }
+
+    .content { padding: 0 0 80px 0; }
+
+    /* Day nav */
+    .day-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid #000;
+    }
+
+    .day-nav-btn {
+      background: #000;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .day-nav-center {
+      text-align: center;
+    }
+
+    .day-nav-label {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .day-nav-sub {
+      font-size: 11px;
+    }
+
+    /* Meal section */
+    .meal-section {
+      border-bottom: 1px solid #000;
+    }
+
+    .meal-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background: #f5f5f5;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .meal-section-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-small {
+      background: none;
+      border: 1px solid #000;
+      padding: 3px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Food item rows */
+    .food-item-row {
+      display: flex;
+      align-items: center;
+      padding: 8px 20px;
+      border-bottom: 1px solid #eee;
+      font-size: 13px;
+    }
+
+    .food-item-row:last-child { border-bottom: none; }
+
+    .food-name { flex: 1; }
+
+    .food-amount {
+      width: 70px;
+      text-align: right;
+      color: #333;
+    }
+
+    .food-actions {
+      display: flex;
+      gap: 6px;
+      margin-left: 10px;
+    }
+
+    .btn-tiny {
+      background: #000;
+      color: #fff;
+      border: none;
+      padding: 3px 8px;
+      font-size: 10px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-tiny-outline {
+      background: #fff;
+      color: #000;
+      border: 1px solid #000;
+      padding: 3px 8px;
+      font-size: 10px;
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .add-item-row {
+      padding: 8px 20px;
+      font-size: 12px;
+    }
+
+    .add-item-btn {
+      background: none;
+      border: none;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: underline;
+      color: #000;
+    }
+
+    .empty-meal-msg {
+      padding: 8px 20px;
+      font-size: 13px;
+      color: #888;
+      font-style: italic;
+    }
+
+    /* Summary row */
+    .summary-row {
+      display: flex;
+      border-bottom: 1px solid #000;
+      border-top: none;
+    }
+
+    .summary-cell {
+      flex: 1;
+      text-align: center;
+      padding: 10px 4px;
+      border-right: 1px solid #ccc;
+      font-size: 11px;
+    }
+
+    .summary-cell:last-child { border-right: none; }
+
+    .summary-cell .s-label {
+      font-size: 10px;
+      color: #555;
+      text-transform: uppercase;
+    }
+
+    .summary-cell .s-val {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    /* Bottom actions */
+    .bottom-actions {
+      padding: 16px 20px;
+    }
+
+    .btn-black-full {
+      display: block;
+      width: 100%;
+      background: #000;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      font-size: 14px;
+      text-align: center;
+      cursor: pointer;
+      font-family: inherit;
+      margin-bottom: 8px;
+    }
+
+    .btn-outline-full {
+      display: block;
+      width: 100%;
+      background: #fff;
+      color: #000;
+      border: 1px solid #000;
+      padding: 12px;
+      font-size: 14px;
+      text-align: center;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Bottom nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 393px;
+      display: flex;
+      border-top: 1px solid #000;
+      background: #fff;
+      height: 60px;
+    }
+
+    .nav-tab {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      border-right: 1px solid #000;
+      cursor: pointer;
+      text-decoration: none;
+      color: #000;
+    }
+
+    .nav-tab:last-child { border-right: none; }
+    .nav-tab.active { background: #000; color: #fff; }
+  </style>
+</head>
+<body>
+
+  <div class="status-bar">
+    <span>9:41</span>
+    <span>●●●</span>
+  </div>
+
+  <div class="page-header">Day View</div>
+
+  <div class="content">
+
+    <!-- Day Navigation -->
+    <div class="day-nav">
+      <a href="/day/{{ prev_weekday }}" class="day-nav-btn">‹ Prev</a>
+      <div class="day-nav-center">
+        <div class="day-nav-label">{{ weekday_display }}</div>
+        <div class="day-nav-sub">{{ date_label }}</div>
+      </div>
+      <a href="/day/{{ next_weekday }}" class="day-nav-btn">Next ›</a>
+    </div>
+
+    <!-- Daily Macro Summary -->
+    <div class="summary-row">
+      <div class="summary-cell">
+        <div class="s-label">Protein</div>
+        <div class="s-val">{{ protein }}g</div>
+      </div>
+      <div class="summary-cell">
+        <div class="s-label">Carbs</div>
+        <div class="s-val">{{ carbs }}g</div>
+      </div>
+      <div class="summary-cell">
+        <div class="s-label">Fiber</div>
+        <div class="s-val">{{ fiber }}g</div>
+      </div>
+      <div class="summary-cell">
+        <div class="s-label">Sugar</div>
+        <div class="s-val">{{ sugar }}g</div>
+      </div>
+    </div>
+
+    <!-- ── BREAKFAST ── -->
+    <div class="meal-section">
+      <div class="meal-section-header">
+        <div class="meal-section-title">Breakfast</div>
+        <form action="/delete-meal/{{ weekday }}/breakfast" method="POST" style="display:inline;">
+          <button class="btn-small" type="submit">Delete Meal</button>
+        </form>
+      </div>
+
+      {% for food in meals.breakfast %}
+      <div class="food-item-row">
+        <div class="food-name">{{ food.name | title }}</div>
+        <div class="food-amount">{{ food.food_amount }}{{ food.food_unit }}</div>
+        <div class="food-actions">
+          <a href="/edit/{{ food._id }}" class="btn-tiny-outline">Edit</a>
+          <form action="/delete/{{ food._id }}" method="POST" style="display:inline;">
+            <button class="btn-tiny" type="submit">Remove</button>
+          </form>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-meal-msg">No breakfast items</div>
+      {% endfor %}
+
+      <div class="add-item-row">
+        <a href="/add-item?weekday={{ weekday }}&meal=breakfast" class="add-item-btn">+ Add Item</a>
+      </div>
+    </div>
+
+    <!-- ── LUNCH ── -->
+    <div class="meal-section">
+      <div class="meal-section-header">
+        <div class="meal-section-title">Lunch</div>
+        <form action="/delete-meal/{{ weekday }}/lunch" method="POST" style="display:inline;">
+          <button class="btn-small" type="submit">Delete Meal</button>
+        </form>
+      </div>
+
+      {% for food in meals.lunch %}
+      <div class="food-item-row">
+        <div class="food-name">{{ food.name | title }}</div>
+        <div class="food-amount">{{ food.food_amount }}{{ food.food_unit }}</div>
+        <div class="food-actions">
+          <a href="/edit/{{ food._id }}" class="btn-tiny-outline">Edit</a>
+          <form action="/delete/{{ food._id }}" method="POST" style="display:inline;">
+            <button class="btn-tiny" type="submit">Remove</button>
+          </form>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-meal-msg">No lunch items</div>
+      {% endfor %}
+
+      <div class="add-item-row">
+        <a href="/add-item?weekday={{ weekday }}&meal=lunch" class="add-item-btn">+ Add Item</a>
+      </div>
+    </div>
+
+    <!-- ── DINNER ── -->
+    <div class="meal-section">
+      <div class="meal-section-header">
+        <div class="meal-section-title">Dinner</div>
+        <form action="/delete-meal/{{ weekday }}/dinner" method="POST" style="display:inline;">
+          <button class="btn-small" type="submit">Delete Meal</button>
+        </form>
+      </div>
+
+      {% for food in meals.dinner %}
+      <div class="food-item-row">
+        <div class="food-name">{{ food.name | title }}</div>
+        <div class="food-amount">{{ food.food_amount }}{{ food.food_unit }}</div>
+        <div class="food-actions">
+          <a href="/edit/{{ food._id }}" class="btn-tiny-outline">Edit</a>
+          <form action="/delete/{{ food._id }}" method="POST" style="display:inline;">
+            <button class="btn-tiny" type="submit">Remove</button>
+          </form>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-meal-msg">No dinner items</div>
+      {% endfor %}
+
+      <div class="add-item-row">
+        <a href="/add-item?weekday={{ weekday }}&meal=dinner" class="add-item-btn">+ Add Item</a>
+      </div>
+    </div>
+
+    <!-- Bottom Actions -->
+    <div class="bottom-actions">
+      <form action="/swap-day/{{ weekday }}" method="POST">
+        <button class="btn-black-full" type="submit">Swap Day's Meals</button>
+      </form>
+      <form action="/delete-day/{{ weekday }}" method="POST"
+            onsubmit="return confirm('Delete all meals for {{ weekday_display }}?')">
+        <button class="btn-outline-full" type="submit">Delete Day Plan</button>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a href="/"    class="nav-tab">Home</a>
+    <a href="/week" class="nav-tab">Week</a>
+    <a href="/day/{{ today_weekday }}" class="nav-tab active">Day</a>
+  </nav>
+
+</body>
+</html>
