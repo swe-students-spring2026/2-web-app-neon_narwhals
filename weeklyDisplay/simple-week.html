@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=393, initial-scale=1.0" />
+  <title>MealPrep – Week</title>
+  <link rel="stylesheet" href="week.css" />
+</head>
+<body>
+<div class="screen">
+<div class="scroll-area">
+
+  <div class="status-bar">
+    <span>9:41</span>
+    <span>●●●</span>
+  </div>
+
+  <div class="page-header">Week View</div>
+
+  <div class="content">
+
+    <!-- Week Navigation -->
+    <div class="week-nav">
+      <a href="{{ prev_week_url }}" class="week-nav-btn">‹ Prev</a>
+      <div>
+        <div class="week-nav-label">{{ week_label }}</div>
+        <div class="week-nav-sub">{{ week_sub_label }}</div>
+      </div>
+      <a href="{{ next_week_url }}" class="week-nav-btn">Next ›</a>
+    </div>
+
+    <!-- Day Blocks -->
+    {% for day in week_days %}
+    <div class="day-block">
+      <div class="day-header {% if day.is_today %}today{% endif %}">
+        <span class="day-name">
+          {{ day.name }}{% if day.is_today %} · Today{% endif %}
+        </span>
+        <div class="day-header-actions">
+          <a href="/day/{{ day.full_name }}" class="btn-small">Edit</a>
+          <form action="/delete-day/{{ day.full_name }}" method="POST"
+                style="display:inline;"
+                onsubmit="return confirm('Delete all meals for {{ day.name }}?')">
+            <button class="btn-small" type="submit">Delete</button>
+          </form>
+        </div>
+      </div>
+
+      {% set bf = day.meals.breakfast %}
+      {% set ln = day.meals.lunch %}
+      {% set dn = day.meals.dinner %}
+
+      {% if bf or ln or dn %}
+        <div class="meal-row">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-items {% if not bf %}empty{% endif %}">
+            {% if bf %}
+              {{ bf | map(attribute='name') | join(', ') | title }}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+        </div>
+        <div class="meal-row">
+          <div class="meal-type">Lunch</div>
+          <div class="meal-items {% if not ln %}empty{% endif %}">
+            {% if ln %}
+              {{ ln | map(attribute='name') | join(', ') | title }}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+        </div>
+        <div class="meal-row">
+          <div class="meal-type">Dinner</div>
+          <div class="meal-items {% if not dn %}empty{% endif %}">
+            {% if dn %}
+              {{ dn | map(attribute='name') | join(', ') | title }}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+        </div>
+      {% else %}
+        <div class="meal-row">
+          <div class="meal-type"></div>
+          <div class="meal-items empty">No meals planned</div>
+        </div>
+      {% endif %}
+
+    </div>
+    {% endfor %}
+
+    <!-- Actions -->
+    <div class="delete-week-row">
+      <form action="/delete-week" method="POST"
+            onsubmit="return confirm('Delete the entire week plan?')">
+        <button class="btn-black-full" type="submit">Delete Week Plan</button>
+      </form>
+      <a href="/grocery/new" class="btn-outline-full">+ New Grocery List</a>
+    </div>
+
+  </div>
+
+</div><!-- end scroll-area -->
+
+  <!-- Bottom Nav — always visible, outside scroll -->
+  <nav class="bottom-nav">
+    <a href="/"    class="nav-tab">Home</a>
+    <a href="/week" class="nav-tab active">Week</a>
+    <a href="/day/{{ today_weekday }}" class="nav-tab">Day</a>
+  </nav>
+
+</div><!-- end screen -->
+</body>
+</html>
