@@ -5,6 +5,67 @@
   <meta name="viewport" content="width=393, initial-scale=1.0" />
   <title>MealPrep – Week</title>
   <link rel="stylesheet" href="week.css" />
+  <style>
+    .meal-item {
+      display: inline-block;
+      margin: 2px;
+      padding: 4px 8px;
+      background-color: #f0f0f0;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      position: relative;
+    }
+    .meal-item:hover {
+      background-color: #e0e0e0;
+    }
+    .food-name {
+      margin-right: 5px;
+    }
+    .item-actions {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 0;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+    .meal-item:hover .item-actions {
+      display: flex;
+    }
+    .action-btn {
+      background: none;
+      border: none;
+      padding: 2px 6px;
+      cursor: pointer;
+      font-size: 10px;
+      color: #666;
+      text-decoration: none;
+    }
+    .action-btn:hover {
+      background-color: #f0f0f0;
+    }
+    .delete-btn {
+      color: #ff3b30 !important;
+    }
+    .add-meal-btn {
+      display: inline-block;
+      margin: 2px;
+      padding: 4px 8px;
+      background-color: #007AFF;
+      color: white;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 12px;
+      text-decoration: none;
+      border: 1px solid #007AFF;
+    }
+    .add-meal-btn:hover {
+      background-color: #0056b3;
+    }
+  </style>
 </head>
 <body>
 <div class="screen">
@@ -37,7 +98,6 @@
           {{ day.name }}{% if day.is_today %} · Today{% endif %}
         </span>
         <div class="day-header-actions">
-          <a href="/day/{{ day.full_name }}" class="btn-small">Edit</a>
           <form action="/delete-day/{{ day.full_name }}" method="POST"
                 style="display:inline;"
                 onsubmit="return confirm('Delete all meals for {{ day.name }}?')">
@@ -55,9 +115,20 @@
           <div class="meal-type">Breakfast</div>
           <div class="meal-items {% if not bf %}empty{% endif %}">
             {% if bf %}
-              {{ bf | map(attribute='name') | join(', ') | title }}
+              {% for item in bf %}
+                <span class="meal-item">
+                  <span class="food-name">{{ item.name | title }}</span>
+                  <div class="item-actions">
+                    <a href="/edit/{{ item._id }}" class="action-btn">Edit</a>
+                    <a href="/delete/{{ item._id }}" class="action-btn delete-btn" 
+                       onclick="return confirm('Delete {{ item.name }}?')">Del</a>
+                  </div>
+                </span>
+              {% endfor %}
+              <a href="/add-item?weekday={{ day.full_name }}&meal=breakfast" class="add-meal-btn">+</a>
             {% else %}
-              —
+              <span class="empty">—</span>
+              <a href="/add-item?weekday={{ day.full_name }}&meal=breakfast" class="add-meal-btn">+ Add</a>
             {% endif %}
           </div>
         </div>
@@ -65,9 +136,20 @@
           <div class="meal-type">Lunch</div>
           <div class="meal-items {% if not ln %}empty{% endif %}">
             {% if ln %}
-              {{ ln | map(attribute='name') | join(', ') | title }}
+              {% for item in ln %}
+                <span class="meal-item">
+                  <span class="food-name">{{ item.name | title }}</span>
+                  <div class="item-actions">
+                    <a href="/edit/{{ item._id }}" class="action-btn">Edit</a>
+                    <a href="/delete/{{ item._id }}" class="action-btn delete-btn" 
+                       onclick="return confirm('Delete {{ item.name }}?')">Del</a>
+                  </div>
+                </span>
+              {% endfor %}
+              <a href="/add-item?weekday={{ day.full_name }}&meal=lunch" class="add-meal-btn">+</a>
             {% else %}
-              —
+              <span class="empty">—</span>
+              <a href="/add-item?weekday={{ day.full_name }}&meal=lunch" class="add-meal-btn">+ Add</a>
             {% endif %}
           </div>
         </div>
@@ -75,16 +157,44 @@
           <div class="meal-type">Dinner</div>
           <div class="meal-items {% if not dn %}empty{% endif %}">
             {% if dn %}
-              {{ dn | map(attribute='name') | join(', ') | title }}
+              {% for item in dn %}
+                <span class="meal-item">
+                  <span class="food-name">{{ item.name | title }}</span>
+                  <div class="item-actions">
+                    <a href="/edit/{{ item._id }}" class="action-btn">Edit</a>
+                    <a href="/delete/{{ item._id }}" class="action-btn delete-btn" 
+                       onclick="return confirm('Delete {{ item.name }}?')">Del</a>
+                  </div>
+                </span>
+              {% endfor %}
+              <a href="/add-item?weekday={{ day.full_name }}&meal=dinner" class="add-meal-btn">+</a>
             {% else %}
-              —
+              <span class="empty">—</span>
+              <a href="/add-item?weekday={{ day.full_name }}&meal=dinner" class="add-meal-btn">+ Add</a>
             {% endif %}
           </div>
         </div>
       {% else %}
         <div class="meal-row">
-          <div class="meal-type"></div>
-          <div class="meal-items empty">No meals planned</div>
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-items empty">
+            <span>—</span>
+            <a href="/add-item?weekday={{ day.full_name }}&meal=breakfast" class="add-meal-btn">+ Add</a>
+          </div>
+        </div>
+        <div class="meal-row">
+          <div class="meal-type">Lunch</div>
+          <div class="meal-items empty">
+            <span>—</span>
+            <a href="/add-item?weekday={{ day.full_name }}&meal=lunch" class="add-meal-btn">+ Add</a>
+          </div>
+        </div>
+        <div class="meal-row">
+          <div class="meal-type">Dinner</div>
+          <div class="meal-items empty">
+            <span>—</span>
+            <a href="/add-item?weekday={{ day.full_name }}&meal=dinner" class="add-meal-btn">+ Add</a>
+          </div>
         </div>
       {% endif %}
 
