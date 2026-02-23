@@ -8,7 +8,7 @@ Our meal prepping website allows users to conveniently organize their groceries 
 
 ## User stories
 
-See instructions. Delete this line and place a link to the user stories here.
+[Link](https://github.com/swe-students-spring2026/2-web-app-neon_narwhals/issues/3#issue-3955535770)
 
 ## Steps necessary to run the software
 

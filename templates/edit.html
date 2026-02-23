@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Food Item - Food Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            border-color: #2196F3;
+            outline: none;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .save-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+        .save-btn:hover {
+            background-color: #1976D2;
+        }
+        .cancel-btn {
+            background-color: #666;
+            color: white;
+        }
+        .cancel-btn:hover {
+            background-color: #555;
+        }
+        .button-group {
+            text-align: center;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✏️ Edit Food Item</h1>
+        
+        <form action="/edit/{{ food._id }}" method="POST">
+            <div class="form-group">
+                <label for="name">Food Name:</label>
+                <input type="text" id="name" name="name" value="{{ food.name }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="food_type">Food Type:</label>
+                <select id="food_type" name="food_type" required>
+                    <option value="protein" {% if food.food_type == 'protein' %}selected{% endif %}>Protein</option>
+                    <option value="vegetable" {% if food.food_type == 'vegetable' %}selected{% endif %}>Vegetable</option>
+                    <option value="fruit" {% if food.food_type == 'fruit' %}selected{% endif %}>Fruit</option>
+                    <option value="carbohydrate" {% if food.food_type == 'carbohydrate' %}selected{% endif %}>Carbohydrate</option>
+                    <option value="dairy" {% if food.food_type == 'dairy' %}selected{% endif %}>Dairy</option>
+                    <option value="grain" {% if food.food_type == 'grain' %}selected{% endif %}>Grain</option>
+                    <option value="snack" {% if food.food_type == 'snack' %}selected{% endif %}>Snack</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="food_amount">Amount (grams):</label>
+                <input type="number" id="food_amount" name="food_amount" value="{{ food.food_amount }}" min="1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="calorie_amount">Calories:</label>
+                <input type="number" id="calorie_amount" name="calorie_amount" value="{{ food.calorie_amount }}" min="0" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="weekday">Weekday:</label>
+                <select id="weekday" name="weekday" required>
+                    <option value="monday" {% if food.weekday == 'monday' %}selected{% endif %}>Monday</option>
+                    <option value="tuesday" {% if food.weekday == 'tuesday' %}selected{% endif %}>Tuesday</option>
+                    <option value="wednesday" {% if food.weekday == 'wednesday' %}selected{% endif %}>Wednesday</option>
+                    <option value="thursday" {% if food.weekday == 'thursday' %}selected{% endif %}>Thursday</option>
+                    <option value="friday" {% if food.weekday == 'friday' %}selected{% endif %}>Friday</option>
+                    <option value="saturday" {% if food.weekday == 'saturday' %}selected{% endif %}>Saturday</option>
+                    <option value="sunday" {% if food.weekday == 'sunday' %}selected{% endif %}>Sunday</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="time_in_day">Time of Day:</label>
+                <select id="time_in_day" name="time_in_day" required>
+                    <option value="breakfast" {% if food.time_in_day == 'breakfast' %}selected{% endif %}>Breakfast</option>
+                    <option value="lunch" {% if food.time_in_day == 'lunch' %}selected{% endif %}>Lunch</option>
+                    <option value="dinner" {% if food.time_in_day == 'dinner' %}selected{% endif %}>Dinner</option>
+                    <option value="snack" {% if food.time_in_day == 'snack' %}selected{% endif %}>Snack</option>
+                </select>
+            </div>
+            
+            <div class="button-group">
+                <button type="submit" class="save-btn">Save Changes</button>
+                <a href="/">
+                    <button type="button" class="cancel-btn">Cancel</button>
+                </a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
