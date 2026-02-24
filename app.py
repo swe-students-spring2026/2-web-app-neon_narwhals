@@ -8,14 +8,15 @@ See the README.md file for instructions how to set up and run the app in develop
 import os
 import datetime
 #from flask import Flask, render_template, request, redirect, url_for
-from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, Blueprint
 import pymongo
 from bson.objectid import ObjectId
 from dotenv import load_dotenv, dotenv_values
+from grocery import grocery_bp
+# from jinja2 import ChoiceLoader, FileSystemLoader
+
 
 load_dotenv()  # load environment variables from .env file
-
-
 class Food:
     """
     Food class to represent a food item with nutritional and timing information.
@@ -49,6 +50,7 @@ def create_app():
     """
 
     app = Flask(__name__, template_folder='weeklyDisplay')
+    
     # load flask config from env variables
     config = dotenv_values()
     app.config.from_mapping(config)
@@ -81,15 +83,17 @@ def create_app():
     except Exception as e:
         print(" * MongoDB connection error:", e)
 
-    @app.route("/grocery-list")
-    def grocery_list():
-        """Grocery list page from groceryDisplay folder"""
-        return send_from_directory('groceryDisplay', 'grocery-list.html')
+    app.register_blueprint(grocery_bp)
+    
+    # @app.route("/grocery-list")
+    # def grocery_list():
+    #     """Grocery list page from groceryDisplay folder"""
+    #     return send_from_directory('groceryDisplay', 'grocery-list.html')
 
-    @app.route("/groceryDisplay/<path:filename>")
-    def serve_grocery_display(filename):
-        """ CSS, images, and other assets from groceryDisplay folder."""
-        return send_from_directory('groceryDisplay', filename)
+    # @app.route("/groceryDisplay/<path:filename>")
+    # def serve_grocery_display(filename):
+    #     """ CSS, images, and other assets from groceryDisplay folder."""
+    #     return send_from_directory('groceryDisplay', filename)
 
     @app.route("/")
     @app.route("/week")
@@ -672,6 +676,10 @@ def create_app():
         result = db.foods.delete_many({"name": food_name, "weekday": weekday, "time_in_day": time_in_day})
         return jsonify({"message": f"Deleted {result.deleted_count} food items"})
 
+    @app.route('/groceryDisplay/<path:filename>')
+    def grocery_display_static(filename):
+        return send_from_directory('groceryDisplay', filename)
+    
     @app.errorhandler(Exception)
     def handle_error(e):
         """
@@ -684,10 +692,10 @@ def create_app():
         # Handle JSON API requests
         if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
             return jsonify({"error": str(e)}), 500
-        
-        # Handle HTML requests
-        return render_template("error.html", error=str(e)), 500
 
+    @app.errorhandler(Exception)
+    def handle_error(e):
+        return str(e), 500
     return app
 
 
@@ -698,4 +706,4 @@ if __name__ == "__main__":
     FLASK_ENV = os.getenv("FLASK_ENV")
     print(f"FLASK_ENV: {FLASK_ENV}, FLASK_PORT: {FLASK_PORT}")
 
-    app.run(port=FLASK_PORT)
+    app.run(port=FLASK_PORT, debug=True)

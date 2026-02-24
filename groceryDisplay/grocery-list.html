@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=393, initial-scale=1.0" />
   <title>MealPrep - New Grocery List</title>
-  <link rel="stylesheet" href="../groceryDisplay/style.css" />
+  <link rel="stylesheet" href="/groceryDisplay/style.css">
 </head>
 <body>
   <div class="status-bar">
@@ -88,7 +88,7 @@
     </div>
 
     <div class="section-label add-section">Add New Item</div>
-    <form action="#" method="get">
+    <form action="/grocery-list" method="POST">
       <div class="form-group">
         <label for="food-name">Food Name:</label>
         <input type="text" id="food-name" name="name" placeholder="Food Item" />
@@ -103,7 +103,7 @@
 
   <nav class="bottom-nav">
     <a href="../weeklyDisplay/simple-day.html" class="nav-tab">Home</a>
-    <a href="../weeklyDisplay/simple-week.html" class="nav-tab">Week</a>
+    <a href="weeklyDisplay/week" class="nav-tab">Week</a>
     <a href="../weeklyDisplay/simple-day.html" class="nav-tab">Day</a>
   </nav>
 </body>
