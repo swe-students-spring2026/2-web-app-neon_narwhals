@@ -1,3 +1,4 @@
+/* Base layout and global reset for grocery screens (list + history) */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -9,6 +10,7 @@ body {
     display: flex-start;
 }
 
+/* iOS-style fake status bar at the top of the screen */
 .status-bar {
     height: 50px;
     background: #fff;
@@ -18,6 +20,7 @@ body {
     font-size: 12px;
     justify-content: space-between;
 }
+/* Page title area under the status bar */
 .page-header {
     text-align: center;
     padding: 12px 0 16px 0;
@@ -25,6 +28,74 @@ body {
     font-weight: 600;
     border-bottom: 1px solid #000;
 }
+
+/* Grocery list content layout ( header text, category sections, and add-item form )*/
+.content { padding: 0 20px 80px 20px; }
+.section-label {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 16px 0 10px 0;
+}
+.category-block { margin-bottom: 16px; }
+.category-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #ccc;
+}
+.category-title .cat-display { text-transform: none; }
+.item-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+}
+.item-row:last-child { border-bottom: none; }
+.item-name { flex: 1; }
+.item-amount { width: 70px; text-align: right; color: #333; }
+.btn-delete {
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    margin-right: 10px;
+}
+.add-section {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #000;
+}
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; margin-bottom: 4px; }
+.form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #000;
+    font-size: 14px;
+    font-family: inherit;
+}
+.btn-add-item {
+    display: block;
+    width: 100%;
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 12px;
+    font-size: 14px;
+    text-align: center;
+    cursor: pointer;
+    font-family: inherit;
+    margin-top: 16px;
+}
+.empty-cat { font-size: 13px; color: #888; font-style: italic; padding: 8px 0; }
+
+/* Grocery history table layout (for previous grocery lists) */
 .week-block {
     padding: 10px 20px;
     border-bottom: 1px solid #000;
@@ -45,6 +116,7 @@ body {
 .bottom-nav {
     position: fixed;
     bottom: 0;
+    left: 0;
     width: 393px;
     display: flex;
     border-top: 1px solid #000;
