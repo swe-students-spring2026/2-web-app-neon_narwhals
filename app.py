@@ -81,6 +81,16 @@ def create_app():
     except Exception as e:
         print(" * MongoDB connection error:", e)
 
+    @app.route("/grocery-list")
+    def grocery_list():
+        """Grocery list page from groceryDisplay folder"""
+        return send_from_directory('groceryDisplay', 'grocery-list.html')
+
+    @app.route("/groceryDisplay/<path:filename>")
+    def serve_grocery_display(filename):
+        """ CSS, images, and other assets from groceryDisplay folder."""
+        return send_from_directory('groceryDisplay', filename)
+
     @app.route("/")
     @app.route("/week")
     def home():
