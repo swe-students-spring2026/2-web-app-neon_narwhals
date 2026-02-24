@@ -266,6 +266,26 @@ def create_app():
         else:
             return jsonify({"error": "Food not found"}), 404
 
+    @app.route("/search_database/<food_name>/category")
+    def lookup_food_category(food_name):
+        doc = db.foodstats.find_one({"Name": {"$regex": food_name, "$options": "i"}})
+        if doc:
+            return doc["Category"]
+        else:
+            return jsonify({"error": "Food not found"}), 404
+    @app.route("/search_database/calorie_limit/<cal_limit>")
+    def lookup_calories_limit(cal_limit):
+        docs = list(db.foodstats.find({"Cal_per_serv": {"$lte": float(cal_limit)}}))
+        if docs:
+            for doc in docs:
+                doc["_id"] = str(doc["_id"])
+            return jsonify({"foods": docs})
+        else:
+            return jsonify({"error": "No food found for calorie limit"}), 404
+
+    
+
+
     
 
     @app.errorhandler(Exception)
