@@ -679,6 +679,30 @@ def create_app():
     @app.route('/groceryDisplay/<path:filename>')
     def grocery_display_static(filename):
         return send_from_directory('groceryDisplay', filename)
+        
+    @app.route("/search_database/<food_name>")
+    def search_food_data(food_name):
+        doc = db.foodstats.find_one({"Name":{"$regex": food_name, "$options":"i"}})
+        if doc:
+            doc["_id"] = str(doc["_id"])
+            return jsonify(doc)
+        else:
+            return jsonify ({"error": "Food not found"}), 404
+
+    @app.route("/search_database/<food_name>/category")
+    def lookup_food_category(food_name):
+        doc = db.foodstats.find_one({"Name": {"$regex": food_name, "$options": "i"}})
+        if doc:
+            return doc["Category"]
+        else:
+            return jsonify ({"error": "Food not found"}), 404
+    @app.route("/search_database/<food_name>/find_calperserv")
+    def find_calories_per_serving(food_name):
+        doc = db.foodstats.find_one({"Name":{"$regex": food_name, "$options": "i"}})
+        if doc:
+            return jsonify(doc["Calories"]/100)
+        else:
+            return jsonify ({"error": "Food not found"}), 404
     
     @app.errorhandler(Exception)
     def handle_error(e):
@@ -693,6 +717,7 @@ def create_app():
         if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
             return jsonify({"error": str(e)}), 500
 
+    
     @app.errorhandler(Exception)
     def handle_error(e):
         return str(e), 500
