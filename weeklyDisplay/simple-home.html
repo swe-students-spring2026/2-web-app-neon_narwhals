@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=393, initial-scale=1.0" />
+  <title>MealPrep – Home</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="home.css" />
+</head>
+<body>
+
+  <div class="status-bar">
+    <span>9:41</span>
+    <span>●●●</span>
+  </div>
+
+  <div class="page-header">MealPrep</div>
+
+  <div class="content" style="padding-bottom: 80px;">
+
+    <!-- Current Week -->
+    <div class="week-banner">
+      <div>
+        <div class="week-banner-label">Current Week</div>
+        <div class="week-banner-date">{{ week_label }}</div>
+      </div>
+      <div style="font-size: 12px;">{{ days_planned }} days planned</div>
+    </div>
+
+    <!-- Day Strip -->
+    <div class="day-strip">
+      {% for day in week_dates %}
+      <a href="/day/{{ day.full_name }}"
+         class="day-cell {% if day.is_today %}today{% endif %}">
+        <div class="day-name">{{ day.short_name }}</div>
+        <div class="day-num">{{ day.day_number }}</div>
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- 3-Day Rule -->
+    <div class="alert-box">
+      <div class="alert-title">3-Day Rule</div>
+      {{ stale_text }}
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Grocery list preview -->
+    <div class="section-title">Grocery List – {{ week_grocery_label }}</div>
+
+    <div style="margin-bottom: 16px;">
+      {% if grocery_items %}
+      <!-- Header row -->
+      <div class="item-row" style="font-weight: 700; border-bottom: 1px solid #000;">
+        <div class="item-label">Food Item</div>
+        <div class="item-category">Category</div>
+        <div class="item-amount">Amount</div>
+      </div>
+
+      {% for food in grocery_items[:3] %}
+      <div class="item-row">
+        <div class="item-label">{{ food.name | title }}</div>
+        <div class="item-category">{{ food.food_type | title }}</div>
+        <div class="item-amount">{{ food.food_amount }}{{ food.food_unit }}</div>
+      </div>
+      {% endfor %}
+
+      {% if grocery_items | length > 3 %}
+      <div class="item-row" style="font-size:12px; color:#555; border-bottom:none;">
+        + {{ grocery_items | length - 3 }} more item{{ 's' if (grocery_items | length - 3) != 1 else '' }}
+      </div>
+      {% endif %}
+
+      {% else %}
+      <p class="empty-msg">No grocery items yet.</p>
+      {% endif %}
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Actions -->
+    <a href="/grocery/new" class="btn-black">+ New Grocery List</a>
+    <a href="/week"        class="btn-outline">View This Week</a>
+    <a href="/day/{{ today_weekday }}" class="btn-outline">View Today</a>
+
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a href="/"    class="nav-tab active">Home</a>
+    <a href="/week" class="nav-tab">Week</a>
+    <a href="/day/{{ today_weekday }}" class="nav-tab">Day</a>
+  </nav>
+
+</body>
+</html>

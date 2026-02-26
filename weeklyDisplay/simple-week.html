@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=393, initial-scale=1.0" />
+  <title>MealPrep – Week</title>
+  <link rel="stylesheet" href="week.css" />
+  <style>
+    .meal-item {
+      display: inline-block;
+      margin: 2px;
+      padding: 4px 8px;
+      background-color: #f0f0f0;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      position: relative;
+    }
+    .meal-item:hover {
+      background-color: #e0e0e0;
+    }
+    .food-name {
+      margin-right: 5px;
+    }
+    .item-actions {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 0;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+    .meal-item:hover .item-actions {
+      display: flex;
+    }
+    .action-btn {
+      background: none;
+      border: none;
+      padding: 2px 6px;
+      cursor: pointer;
+      font-size: 10px;
+      color: #666;
+      text-decoration: none;
+    }
+    .action-btn:hover {
+      background-color: #f0f0f0;
+    }
+    .delete-btn {
+      color: #ff3b30 !important;
+    }
+    .add-meal-btn {
+      display: inline-block;
+      margin: 2px;
+      padding: 4px 8px;
+      background-color: #007AFF;
+      color: white;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 12px;
+      text-decoration: none;
+      border: 1px solid #007AFF;
+    }
+    .add-meal-btn:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+<div class="screen">
+<div class="scroll-area">
+
+  <div class="status-bar">
+    <span>9:41</span>
+    <span>●●●</span>
+  </div>
+
+  <div class="page-header">Week View</div>
+
+  <div class="content">
+
+    <!-- Week Navigation -->
+    <div class="week-nav">
+      <a href="{{ prev_week_url }}" class="week-nav-btn">‹ Prev</a>
+      <div>
+        <div class="week-nav-label">{{ week_label }}</div>
+        <div class="week-nav-sub">{{ week_sub_label }}</div>
+      </div>
+      <a href="{{ next_week_url }}" class="week-nav-btn">Next ›</a>
+    </div>
+
+    <!-- Day Blocks -->
+    {% for day in week_days %}
+    <div class="day-block">
+      <div class="day-header {% if day.is_today %}today{% endif %}">
+        <span class="day-name">
+          {{ day.name }}{% if day.is_today %} · Today{% endif %}
+        </span>
+        <div class="day-header-actions">
+          <form action="/delete-day/{{ day.full_name }}" method="POST"
+                style="display:inline;"
+                onsubmit="return confirm('Delete all meals for {{ day.name }}?')">
+            <button class="btn-small" type="submit">Delete</button>
+          </form>
+        </div>
+      </div>
+
+      {% set bf = day.meals.breakfast %}
+      {% set ln = day.meals.lunch %}
+      {% set dn = day.meals.dinner %}
+
+      {% if bf or ln or dn %}
+        <div class="meal-row">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-items {% if not bf %}empty{% endif %}">
+            {% if bf %}
+              {% for item in bf %}
+                <span class="meal-item">
+                  <span class="food-name">{{ item.name | title }}</span>
+                  <div class="item-actions">
+                    <a href="/edit/{{ item._id }}" class="action-btn">Edit</a>
+                    <a href="/delete/{{ item._id }}" class="action-btn delete-btn" 
+                       onclick="return confirm('Delete {{ item.name }}?')">Del</a>
+                  </div>
+                </span>
+              {% endfor %}
+              <a href="/add-item?weekday={{ day.full_name }}&meal=breakfast" class="add-meal-btn">+</a>
+            {% else %}
+              <span class="empty">—</span>
+              <a href="/add-item?weekday={{ day.full_name }}&meal=breakfast" class="add-meal-btn">+ Add</a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="meal-row">
+          <div class="meal-type">Lunch</div>
+          <div class="meal-items {% if not ln %}empty{% endif %}">
+            {% if ln %}
+              {% for item in ln %}
+                <span class="meal-item">
+                  <span class="food-name">{{ item.name | title }}</span>
+                  <div class="item-actions">
+                    <a href="/edit/{{ item._id }}" class="action-btn">Edit</a>
+                    <a href="/delete/{{ item._id }}" class="action-btn delete-btn" 
+                       onclick="return confirm('Delete {{ item.name }}?')">Del</a>
+                  </div>
+                </span>
+              {% endfor %}
+              <a href="/add-item?weekday={{ day.full_name }}&meal=lunch" class="add-meal-btn">+</a>
+            {% else %}
+              <span class="empty">—</span>
+              <a href="/add-item?weekday={{ day.full_name }}&meal=lunch" class="add-meal-btn">+ Add</a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="meal-row">
+          <div class="meal-type">Dinner</div>
+          <div class="meal-items {% if not dn %}empty{% endif %}">
+            {% if dn %}
+              {% for item in dn %}
+                <span class="meal-item">
+                  <span class="food-name">{{ item.name | title }}</span>
+                  <div class="item-actions">
+                    <a href="/edit/{{ item._id }}" class="action-btn">Edit</a>
+                    <a href="/delete/{{ item._id }}" class="action-btn delete-btn" 
+                       onclick="return confirm('Delete {{ item.name }}?')">Del</a>
+                  </div>
+                </span>
+              {% endfor %}
+              <a href="/add-item?weekday={{ day.full_name }}&meal=dinner" class="add-meal-btn">+</a>
+            {% else %}
+              <span class="empty">—</span>
+              <a href="/add-item?weekday={{ day.full_name }}&meal=dinner" class="add-meal-btn">+ Add</a>
+            {% endif %}
+          </div>
+        </div>
+      {% else %}
+        <div class="meal-row">
+          <div class="meal-type">Breakfast</div>
+          <div class="meal-items empty">
+            <span>—</span>
+            <a href="/add-item?weekday={{ day.full_name }}&meal=breakfast" class="add-meal-btn">+ Add</a>
+          </div>
+        </div>
+        <div class="meal-row">
+          <div class="meal-type">Lunch</div>
+          <div class="meal-items empty">
+            <span>—</span>
+            <a href="/add-item?weekday={{ day.full_name }}&meal=lunch" class="add-meal-btn">+ Add</a>
+          </div>
+        </div>
+        <div class="meal-row">
+          <div class="meal-type">Dinner</div>
+          <div class="meal-items empty">
+            <span>—</span>
+            <a href="/add-item?weekday={{ day.full_name }}&meal=dinner" class="add-meal-btn">+ Add</a>
+          </div>
+        </div>
+      {% endif %}
+
+    </div>
+    {% endfor %}
+
+    <!-- Actions -->
+    <div class="delete-week-row">
+      <form action="/delete-week" method="POST"
+            onsubmit="return confirm('Delete the entire week plan?')">
+        <button class="btn-black-full" type="submit">Delete Week Plan</button>
+      </form>
+      <a href="/grocery/new" class="btn-outline-full">+ New Grocery List</a>
+    </div>
+
+  </div>
+
+</div><!-- end scroll-area -->
+
+  <!-- Bottom Nav — always visible, outside scroll -->
+  <nav class="bottom-nav">
+    <a href="/"    class="nav-tab">Home</a>
+    <a href="/week" class="nav-tab active">Week</a>
+    <a href="/day/{{ today_weekday }}" class="nav-tab">Day</a>
+  </nav>
+
+</div><!-- end screen -->
+</body>
+</html>

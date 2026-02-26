@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grocery History</title>
+    <link rel="stylesheet" href="/groceryDisplay/style.css">
+</head>
+
+<body>
+    <div class="status-bar">
+        <span>9:41</span>
+        <span>●●●</span>
+    </div>
+    <div class="page-header">Grocery History</div>
+
+    <!--WEEK BLOCK -->
+    <div class="history-container">
+
+    {% for week in history %}
+    <div class="week-block">
+        <h3 class="week-title">Week of {{ week.week }}</h3>
+
+        <div class="table-header">
+        <span>Food Item</span>
+        <span>Date Added</span>
+        <span>Amount</span>
+        </div>
+
+        {% for item in week["items"] %}
+        <div class="table-row">
+        <span>{{ item.name }}</span>
+        <span>{{ item.date_added }}</span>
+        <span>{{ item.amount }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+    </div>
+    <!--duplicates-->
+    <!-- <div class="week-block">
+        <h3 class="week-title">Week of 10/1/2024</h3>
+        <div class="table-header">
+            <span>Food Item</span>
+            <span>Date Added</span>
+            <span>Amount</span>
+        </div>
+        <div class="table-row">
+            <span>Milk</span>
+            <span>10/2/2024</span>
+            <span>1 gallon</span>
+        </div>
+        <div class="table-row">
+            <span>Eggs</span>
+            <span>10/3/2024</span>
+            <span>1 dozen</span>
+        </div>
+        <div class="table-row">
+            <span>Broccoli</span>
+            <span>01/03/2026</span>
+            <span>3 heads</span>
+        </div>
+    </div> -->
+    <!--duplicates-->
+    <!-- <div class="week-block">
+        <h3 class="week-title">Week of 10/1/2024</h3>
+        <div class="table-header">
+            <span>Food Item</span>
+            <span>Date Added</span>
+            <span>Amount</span>
+        </div>
+        <div class="table-row">
+            <span>Milk</span>
+            <span>10/2/2024</span>
+            <span>1 gallon</span>
+        </div>
+        <div class="table-row">
+            <span>Eggs</span>
+            <span>10/3/2024</span>
+            <span>1 dozen</span>
+        </div>
+        <div class="table-row">
+            <span>Broccoli</span>
+            <span>01/03/2026</span>
+            <span>3 heads</span>
+        </div>
+    </div> -->
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+        <a href="{{ url_for('grocery.grocery_history_page') }}" class="nav-tab active">History</a>
+        <a href="{{ url_for('grocery.grocery_list') }}" class="nav-tab">Grocery List</a>
+    </div>
+</body>
+
+</html>
