@@ -15,80 +15,21 @@
   <div class="content">
     <div class="section-label">Current Items</div>
 
+    {% for category_name, items in categories.items() %}
     <div class="category-block">
-      <div class="category-title"><span class="cat-display">Protein</span></div>
+      <div class="category-title"><span class="cat-display">{{ category_name }}</span></div>
+      {% for item in items %}
       <div class="item-row">
         <button type="button" class="btn-delete">Delete</button>
-        <span class="item-name">Protein Item</span>
-        <span class="item-amount">Amount</span>
+        <span class="item-name">{{ item.name }}</span>
+        <span class="item-amount">{{ item.amount }}</span>
       </div>
-      <div class="item-row">
-        <button type="button" class="btn-delete">Delete</button>
-        <span class="item-name">Protein Item</span>
-        <span class="item-amount">Amount</span>
-      </div>
-      <div class="item-row">
-        <button type="button" class="btn-delete">Delete</button>
-        <span class="item-name">Protein Item</span>
-        <span class="item-amount">Amount</span>
-      </div>
-      <div class="item-row">
-        <button type="button" class="btn-delete">Delete</button>
-        <span class="item-name">Protein Item</span>
-        <span class="item-amount">Amount</span>
-      </div>
+      {% endfor %}
     </div>
-
-    <div class="category-block">
-      <div class="category-title"><span class="cat-display">Fruits And Vegetables</span></div>
-      <div class="item-row">
-        <button type="button" class="btn-delete">Delete</button>
-        <span class="item-name">Produce Item</span>
-        <span class="item-amount">Amount</span>
-      </div>
-      <div class="item-row">
-        <button type="button" class="btn-delete">Delete</button>
-        <span class="item-name">Produce Item</span>
-        <span class="item-amount">Amount</span>
-      </div>
-      <div class="item-row">
-        <button type="button" class="btn-delete">Delete</button>
-        <span class="item-name">Produce Item</span>
-        <span class="item-amount">Amount</span>
-      </div>
-      <div class="item-row">
-        <button type="button" class="btn-delete">Delete</button>
-        <span class="item-name">Produce Item</span>
-        <span class="item-amount">Amount</span>
-      </div>
-    </div>
-
-    <div class="category-block">
-      <div class="category-title"><span class="cat-display">Dairy</span></div>
-      <div class="item-row">
-        <button type="button" class="btn-delete">Delete</button>
-        <span class="item-name">Dairy Item</span>
-        <span class="item-amount">Amount</span>
-      </div>
-      <div class="item-row">
-        <button type="button" class="btn-delete">Delete</button>
-        <span class="item-name">Dairy Item</span>
-        <span class="item-amount">Amount</span>
-      </div>
-      <div class="item-row">
-        <button type="button" class="btn-delete">Delete</button>
-        <span class="item-name">Dairy Item</span>
-        <span class="item-amount">Amount</span>
-      </div>
-      <div class="item-row">
-        <button type="button" class="btn-delete">Delete</button>
-        <span class="item-name">Dairy Item</span>
-        <span class="item-amount">Amount</span>
-      </div>
-    </div>
+    {% endfor %}
 
     <div class="section-label add-section">Add New Item</div>
-    <form action="/grocery-list" method="POST">
+    <form method="POST" action="{{ url_for('grocery.grocery_list') }}">
       <div class="form-group">
         <label for="food-name">Food Name:</label>
         <input type="text" id="food-name" name="name" placeholder="Food Item" />
