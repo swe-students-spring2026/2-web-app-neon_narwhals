@@ -1,0 +1,26 @@
+[
+    {
+        "week": "10/01/2024",
+        "items": [
+            {"name": "Milk", "date_added": "10/02/2024", "amount": "1 gallon"},
+            {"name": "Eggs", "date_added": "10/03/2024", "amount": "1 dozen"},
+            {"name": "Broccoli", "date_added": "10/03/2024", "amount": "3 heads"}
+        ]
+    },
+    {
+        "week": "10/08/2024",
+        "items": [
+            {"name": "Chicken Breast", "date_added": "10/09/2024", "amount": "2 lbs"},
+            {"name": "Rice", "date_added": "10/09/2024", "amount": "5 lbs"},
+            {"name": "Spinach", "date_added": "10/10/2024", "amount": "2 bags"}
+        ]
+    },
+    {
+        "week": "10/15/2024",
+        "items": [
+            {"name": "Salmon", "date_added": "10/16/2024", "amount": "1.5 lbs"},
+            {"name": "Sweet Potatoes", "date_added": "10/16/2024", "amount": "4"},
+            {"name": "Greek Yogurt", "date_added": "10/17/2024", "amount": "32 oz"}
+        ]
+    }
+]
