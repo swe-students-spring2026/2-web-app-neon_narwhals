@@ -4,7 +4,7 @@ A little exercise to build a web application following an agile development proc
 
 ## Product vision statement
 
-See instructions. Delete this line and place the Product Vision Statement here.
+Our meal prepping website allows users to conveniently organize their groceries into planned meals and simplify the meal prepping process. 
 
 ## User stories
 
