@@ -8,12 +8,12 @@ See the README.md file for instructions how to set up and run the app in develop
 import os
 import datetime
 #from flask import Flask, render_template, request, redirect, url_for
-from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, Blueprint
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, Blueprint, session
 import pymongo
 from bson.objectid import ObjectId
 from dotenv import load_dotenv, dotenv_values
 from grocery import grocery_bp
-# from jinja2 import ChoiceLoader, FileSystemLoader
+from jinja2 import ChoiceLoader, FileSystemLoader
 
 
 load_dotenv()  # load environment variables from .env file
@@ -49,14 +49,26 @@ def create_app():
     returns: app: the Flask application object
     """
 
-    app = Flask(__name__, template_folder='weeklyDisplay')
+    app = Flask(__name__)
+    
+    # Configure template loaders for multiple directories
+    app.jinja_loader = ChoiceLoader([
+        FileSystemLoader('templates'),  # For login.html
+        FileSystemLoader('weeklyDisplay'),  # For existing templates
+    ])
     
     # load flask config from env variables
     config = dotenv_values()
     app.config.from_mapping(config)
+    
+    # Set up session secret key
+    app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 
     cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
     db = cxn[os.getenv("MONGO_DBNAME")]
+    
+    # Attach db to app for use in routes defined outside create_app
+    app.db = db
 
     try:
         cxn.admin.command("ping")
@@ -85,16 +97,6 @@ def create_app():
 
     app.register_blueprint(grocery_bp)
     
-    # @app.route("/grocery-list")
-    # def grocery_list():
-    #     """Grocery list page from groceryDisplay folder"""
-    #     return send_from_directory('groceryDisplay', 'grocery-list.html')
-
-    # @app.route("/groceryDisplay/<path:filename>")
-    # def serve_grocery_display(filename):
-    #     """ CSS, images, and other assets from groceryDisplay folder."""
-    #     return send_from_directory('groceryDisplay', filename)
-
     @app.route("/")
     @app.route("/week")
     def home():
@@ -103,7 +105,12 @@ def create_app():
         Returns:
             HTML template or JSON response with weekly food data.
         """
-        food_docs = list(db.foods.find({}).sort("created_at", -1))
+        # Check if user is logged in
+        username = session.get('username')
+        if not username:
+            return redirect(url_for("login"))
+        
+        food_docs = list(db.foods.find({"username": username}).sort("created_at", -1))
         
         # Check if request wants JSON (API usage)
         if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
@@ -162,8 +169,12 @@ def create_app():
         Returns:
             HTML template with day-specific food form
         """
+        username = session.get('username')
+        if not username:
+            return redirect(url_for("login"))
+        
         # Get foods for this specific day
-        day_foods = list(db.foods.find({"weekday": weekday.lower()}).sort("created_at", -1))
+        day_foods = list(db.foods.find({"weekday": weekday.lower(), "username": username}).sort("created_at", -1))
         
         # Organize by meal time
         meals = {
@@ -377,7 +388,11 @@ def create_app():
         Returns:
             Redirect to home page
         """
-        db.foods.delete_many({"weekday": weekday.lower()})
+        username = session.get('username')
+        if not username:
+            return redirect(url_for("login"))
+        
+        db.foods.delete_many({"weekday": weekday.lower(), "username": username})
         return redirect(url_for("home"))
 
     @app.route("/delete-meal/<weekday>/<meal>", methods=["POST"])
@@ -390,7 +405,11 @@ def create_app():
         Returns:
             Redirect to day view
         """
-        db.foods.delete_many({"weekday": weekday.lower(), "time_in_day": meal.lower()})
+        username = session.get('username')
+        if not username:
+            return redirect(url_for("login"))
+        
+        db.foods.delete_many({"weekday": weekday.lower(), "time_in_day": meal.lower(), "username": username})
         return redirect(url_for("day_view", weekday=weekday))
 
     @app.route("/swap-day/<weekday>", methods=["POST"])
@@ -412,7 +431,11 @@ def create_app():
         Returns:
             Redirect to home page
         """
-        db.foods.delete_many({})
+        username = session.get('username')
+        if not username:
+            return redirect(url_for("login"))
+        
+        db.foods.delete_many({"username": username})
         return redirect(url_for("home"))
 
     @app.route('/<path:filename>')
@@ -430,6 +453,10 @@ def create_app():
         Returns:
             JSON response or redirect to home page.
         """
+        username = session.get('username')
+        if not username:
+            return redirect(url_for("login"))
+        
         # Handle JSON API requests
         if request.is_json:
             data = request.get_json()
@@ -443,7 +470,9 @@ def create_app():
                 data["time_in_day"]
             )
             
-            result = db.foods.insert_one(food.to_dict())
+            food_dict = food.to_dict()
+            food_dict["username"] = username
+            result = db.foods.insert_one(food_dict)
             return jsonify({"message": "Food created successfully", "id": str(result.inserted_id)})
         
         # Handle HTML form submissions
@@ -456,7 +485,9 @@ def create_app():
             time_in_day = request.form["time_in_day"]
 
             food = Food(name, food_type, food_amount, calorie_amount, weekday, time_in_day)
-            db.foods.insert_one(food.to_dict())
+            food_dict = food.to_dict()
+            food_dict["username"] = username
+            db.foods.insert_one(food_dict)
 
             # Check if we should redirect to day view or week view
             redirect_to_day = request.form.get("redirect_to_day")
@@ -476,7 +507,11 @@ def create_app():
         Returns:
             JSON response or HTML template with food item data.
         """
-        food_doc = db.foods.find_one({"_id": ObjectId(food_id)})
+        username = session.get('username')
+        if not username:
+            return redirect(url_for("login"))
+        
+        food_doc = db.foods.find_one({"_id": ObjectId(food_id), "username": username})
         if not food_doc:
             if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
                 return jsonify({"error": "Food item not found"}), 404
@@ -584,6 +619,10 @@ def create_app():
         Returns:
             JSON response or redirect to home page.
         """
+        username = session.get('username')
+        if not username:
+            return redirect(url_for("login"))
+        
         # Handle JSON API requests
         if request.is_json:
             data = request.get_json()
@@ -598,7 +637,7 @@ def create_app():
                 "created_at": datetime.datetime.utcnow(),
             }
 
-            result = db.foods.update_one({"_id": ObjectId(food_id)}, {"$set": updated_food})
+            result = db.foods.update_one({"_id": ObjectId(food_id), "username": username}, {"$set": updated_food})
             
             if result.matched_count > 0:
                 return jsonify({"message": "Food updated successfully"})
@@ -624,7 +663,7 @@ def create_app():
                 "created_at": datetime.datetime.utcnow(),
             }
 
-            result = db.foods.update_one({"_id": ObjectId(food_id)}, {"$set": updated_food})
+            result = db.foods.update_one({"_id": ObjectId(food_id), "username": username}, {"$set": updated_food})
             
             if result.matched_count > 0:
                 return redirect(url_for("day_view", weekday=weekday))
@@ -641,11 +680,15 @@ def create_app():
         Returns:
             JSON response or redirect to appropriate page.
         """
+        username = session.get('username')
+        if not username:
+            return redirect(url_for("login"))
+        
         # Get the food item first to know which day to redirect to
-        food_doc = db.foods.find_one({"_id": ObjectId(food_id)})
+        food_doc = db.foods.find_one({"_id": ObjectId(food_id), "username": username})
         weekday = food_doc.get('weekday', 'monday') if food_doc else 'monday'
         
-        result = db.foods.delete_one({"_id": ObjectId(food_id)})
+        result = db.foods.delete_one({"_id": ObjectId(food_id), "username": username})
         
         # Handle JSON API requests
         if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
@@ -673,36 +716,16 @@ def create_app():
         Returns:
             JSON response with success message and count of deleted items.
         """
-        result = db.foods.delete_many({"name": food_name, "weekday": weekday, "time_in_day": time_in_day})
+        username = session.get('username')
+        if not username:
+            return jsonify({"error": "Authentication required"}), 401
+        
+        result = db.foods.delete_many({"name": food_name, "weekday": weekday, "time_in_day": time_in_day, "username": username})
         return jsonify({"message": f"Deleted {result.deleted_count} food items"})
 
     @app.route('/groceryDisplay/<path:filename>')
     def grocery_display_static(filename):
         return send_from_directory('groceryDisplay', filename)
-        
-    @app.route("/search_database/<food_name>")
-    def search_food_data(food_name):
-        doc = db.foodstats.find_one({"Name":{"$regex": food_name, "$options":"i"}})
-        if doc:
-            doc["_id"] = str(doc["_id"])
-            return jsonify(doc)
-        else:
-            return jsonify ({"error": "Food not found"}), 404
-
-    @app.route("/search_database/<food_name>/category")
-    def lookup_food_category(food_name):
-        doc = db.foodstats.find_one({"Name": {"$regex": food_name, "$options": "i"}})
-        if doc:
-            return doc["Category"]
-        else:
-            return jsonify ({"error": "Food not found"}), 404
-    @app.route("/search_database/<food_name>/find_calperserv")
-    def find_calories_per_serving(food_name):
-        doc = db.foodstats.find_one({"Name":{"$regex": food_name, "$options": "i"}})
-        if doc:
-            return jsonify(doc["Calories"]/100)
-        else:
-            return jsonify ({"error": "Food not found"}), 404
     
     @app.errorhandler(Exception)
     def handle_error(e):
@@ -717,7 +740,6 @@ def create_app():
         if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
             return jsonify({"error": str(e)}), 500
 
-    
     @app.errorhandler(Exception)
     def handle_error(e):
         return str(e), 500
@@ -725,6 +747,63 @@ def create_app():
 
 
 app = create_app()
+
+# Simple login routes (defined after app creation)
+@app.route("/login")
+def login():
+    """Login page for user selection"""
+    return render_template("login.html")
+
+@app.route("/create_user", methods=["POST"])
+def create_user():
+    """Create a new user account"""
+    username = request.form.get("username", "").strip()
+    if not username:
+        return redirect(url_for("login"))
+    
+    # Check if username already exists
+    existing_user = app.db.users.find_one({"username": username})
+    if existing_user:
+        # User exists, just login
+        session['username'] = username
+        return redirect(url_for("home"))
+    
+    # Create new user
+    app.db.users.insert_one({
+        "username": username,
+        "created_at": datetime.datetime.utcnow()
+    })
+    
+    session['username'] = username
+    return redirect(url_for("home"))
+
+@app.route("/login_user", methods=["POST"])
+def login_user():
+    """Login with existing user"""
+    username = request.form.get("username", "").strip()
+    if not username:
+        return redirect(url_for("login"))
+    
+    # Verify user exists
+    user = app.db.users.find_one({"username": username})
+    if user:
+        session['username'] = username
+        return redirect(url_for("home"))
+    
+    return redirect(url_for("login"))
+
+@app.route("/get_users")
+def get_users():
+    """Get list of all usernames for the login page"""
+    users = list(app.db.users.find({}, {"username": 1, "_id": 0}))
+    usernames = [user["username"] for user in users]
+    return jsonify({"users": usernames})
+
+@app.route("/logout")
+def logout():
+    """Logout current user"""
+    session.clear()
+    return redirect(url_for("login"))
 
 if __name__ == "__main__":
     FLASK_PORT = int(os.getenv("FLASK_PORT", "3000"))
