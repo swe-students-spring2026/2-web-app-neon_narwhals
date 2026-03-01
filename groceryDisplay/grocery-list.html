@@ -17,12 +17,15 @@
 
     {% for category_name, items in categories.items() %}
     <div class="category-block">
-      <div class="category-title"><span class="cat-display">{{ category_name }}</span></div>
+      <div class="category-title">
+        <span class="cat-display">{{ category_name }}</span> 
+        <span class="cat-display">Breakfast</span></div>
       {% for item in items %}
       <div class="item-row">
         <button type="button" class="btn-delete">Delete</button>
         <span class="item-name">{{ item.name }}</span>
         <span class="item-amount">{{ item.amount }}</span>
+        <input type="checkbox" name="breakfast" id="{{ item.breakfast }}" {% if item.breakfast %}checked{% endif %}>
       </div>
       {% endfor %}
     </div>
