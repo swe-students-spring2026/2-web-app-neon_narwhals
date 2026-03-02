@@ -57,20 +57,22 @@
         </form>
       </div>
 
-      {% for food in meals.breakfast %}
-      <div class="food-item-row">
-        <div class="food-name">{{ food.name | title }}</div>
-        <div class="food-amount">{{ food.food_amount }}{{ food.food_unit }}</div>
-        <div class="food-actions">
-          <a href="/edit/{{ food._id }}" class="btn-tiny-outline">Edit</a>
-          <form action="/delete/{{ food._id }}" method="POST" style="display:inline;">
-            <button class="btn-tiny" type="submit">Remove</button>
-          </form>
+      {% if meals.breakfast %}
+        {% for food in meals.breakfast %}
+        <div class="food-item-row">
+          <div class="food-name">{{ food.name | title }}</div>
+          <div class="food-amount">{{ food.food_amount }}{{ food.food_unit }}</div>
+          <div class="food-actions">
+            <a href="/edit/{{ food._id }}" class="btn-tiny-outline">Edit</a>
+            <form action="/delete/{{ food._id }}" method="POST" style="display:inline;">
+              <button class="btn-tiny" type="submit">Remove</button>
+            </form>
+          </div>
         </div>
-      </div>
+        {% endfor %}
       {% else %}
       <div class="empty-meal-msg">No breakfast items</div>
-      {% endfor %}
+      {% endif %}
 
       <div class="add-item-row">
         <a href="/add-item?weekday={{ weekday }}&meal=breakfast" class="add-item-btn">+ Add Item</a>
@@ -86,20 +88,22 @@
         </form>
       </div>
 
-      {% for food in meals.lunch %}
-      <div class="food-item-row">
-        <div class="food-name">{{ food.name | title }}</div>
-        <div class="food-amount">{{ food.food_amount }}{{ food.food_unit }}</div>
-        <div class="food-actions">
-          <a href="/edit/{{ food._id }}" class="btn-tiny-outline">Edit</a>
-          <form action="/delete/{{ food._id }}" method="POST" style="display:inline;">
-            <button class="btn-tiny" type="submit">Remove</button>
-          </form>
+      {% if meals.lunch %}
+        {% for food in meals.lunch %}
+        <div class="food-item-row">
+          <div class="food-name">{{ food.name | title }}</div>
+          <div class="food-amount">{{ food.food_amount }}{{ food.food_unit }}</div>
+          <div class="food-actions">
+            <a href="/edit/{{ food._id }}" class="btn-tiny-outline">Edit</a>
+            <form action="/delete/{{ food._id }}" method="POST" style="display:inline;">
+              <button class="btn-tiny" type="submit">Remove</button>
+            </form>
+          </div>
         </div>
-      </div>
+        {% endfor %}
       {% else %}
       <div class="empty-meal-msg">No lunch items</div>
-      {% endfor %}
+      {% endif %}
 
       <div class="add-item-row">
         <a href="/add-item?weekday={{ weekday }}&meal=lunch" class="add-item-btn">+ Add Item</a>
@@ -115,20 +119,22 @@
         </form>
       </div>
 
-      {% for food in meals.dinner %}
-      <div class="food-item-row">
-        <div class="food-name">{{ food.name | title }}</div>
-        <div class="food-amount">{{ food.food_amount }}{{ food.food_unit }}</div>
-        <div class="food-actions">
-          <a href="/edit/{{ food._id }}" class="btn-tiny-outline">Edit</a>
-          <form action="/delete/{{ food._id }}" method="POST" style="display:inline;">
-            <button class="btn-tiny" type="submit">Remove</button>
-          </form>
+      {% if meals.dinner %}
+        {% for food in meals.dinner %}
+        <div class="food-item-row">
+          <div class="food-name">{{ food.name | title }}</div>
+          <div class="food-amount">{{ food.food_amount }}{{ food.food_unit }}</div>
+          <div class="food-actions">
+            <a href="/edit/{{ food._id }}" class="btn-tiny-outline">Edit</a>
+            <form action="/delete/{{ food._id }}" method="POST" style="display:inline;">
+              <button class="btn-tiny" type="submit">Remove</button>
+            </form>
+          </div>
         </div>
-      </div>
+        {% endfor %}
       {% else %}
       <div class="empty-meal-msg">No dinner items</div>
-      {% endfor %}
+      {% endif %}
 
       <div class="add-item-row">
         <a href="/add-item?weekday={{ weekday }}&meal=dinner" class="add-item-btn">+ Add Item</a>

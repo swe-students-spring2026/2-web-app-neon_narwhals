@@ -1,24 +1,4 @@
-/* Status bar placeholder */
-.status-bar {
-    height: 50px;
-    background: #fff;
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    font-size: 12px;
-    justify-content: space-between;
-} */
-/* 
-/* Page header */
-.page-header {
-    text-align: center;
-    padding: 12px 0 16px 0;
-    font-size: 18px;
-    font-weight: 600;
-    border-bottom: 1px solid #000;
-} */
-
-/* Different than day view, since this is more of a dashboard with multiple sections */
+/* Home page overrides base .content padding for dashboard layout */
 .content {
     padding: 20px 24px; 
 }
