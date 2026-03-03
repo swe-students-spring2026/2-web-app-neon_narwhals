@@ -76,9 +76,7 @@ MEAL_CALORIE_SPLITS: dict[str, dict[str, float]] = {
 
 def search_food_data(food_name):
     """function for searching food information"""
-    doc = food_db.foodstats.find_one(
-        {"Name": {"$regex": food_name, "$options": "i"}}
-    )
+    doc = food_db.foodstats.find_one({"Name": {"$regex": food_name, "$options": "i"}})
     if doc:
         doc["_id"] = str(doc["_id"])
         return doc
@@ -88,9 +86,7 @@ def search_food_data(food_name):
 
 def lookup_food_category(food_name):
     """function for finding the category of the food"""
-    doc = food_db.foodstats.find_one(
-        {"name": {"$regex": food_name, "$options": "i"}}
-    )
+    doc = food_db.foodstats.find_one({"name": {"$regex": food_name, "$options": "i"}})
     if doc:
         return doc["Category"]
     else:
@@ -99,9 +95,7 @@ def lookup_food_category(food_name):
 
 def find_calories_per_serving(food_name):
     """find the number of calories per serving"""
-    doc = food_db.foodstats.find_one(
-        {"Name": {"$regex": food_name, "$options": "i"}}
-    )
+    doc = food_db.foodstats.find_one({"Name": {"$regex": food_name, "$options": "i"}})
     if doc:
         return doc["Calories"] / 100
     else:
@@ -131,9 +125,7 @@ def get_food_category(food_name: str) -> str:
     return "Unknown"
 
 
-def build_food_pool(
-    grocery_items: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
+def build_food_pool(grocery_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     pool: list[dict[str, Any]] = []
     for item in grocery_items:
         name = item["name"]
@@ -173,14 +165,7 @@ def fill_meal_slot(
         budget = cat_budget[category]
         items_used = 0
 
-        candidates = [
-            f
-            for f in pool
-            if f["foodCategory"] == category
-            and f["isBreakfast"] == is_breakfast
-            and f["remaining_grams"] > 0
-            and f["cal_per_gram"] > 0
-        ]
+        candidates = [f for f in pool if f["foodCategory"] == category and f["isBreakfast"] == is_breakfast and f["remaining_grams"] > 0 and f["cal_per_gram"] > 0]
 
         candidates.sort(key=lambda f: f["remaining_calories"], reverse=True)
 
@@ -231,9 +216,7 @@ def build_meal_plan(user_id: str) -> dict[str, Any]:
 
         for meal in ("Breakfast", "Lunch", "Dinner"):
             goal = CALORIE_GOALS[meal]
-            items, total_cal = fill_meal_slot(
-                pool, meal, goal, used_protein_today
-            )
+            items, total_cal = fill_meal_slot(pool, meal, goal, used_protein_today)
             daily_plan[meal] = {
                 "items": items,
                 "total_calories": total_cal,
@@ -321,13 +304,7 @@ if __name__ == "__main__":
     for day, meals in plan.items():
         print(f"── {day} ──")
         for meal_name, data in meals.items():
-            print(
-                f"  {meal_name}  (goal: {data['calorie_goal']} kcal | "
-                f"used: {data['total_calories']} kcal)"
-            )
+            print(f"  {meal_name}  (goal: {data['calorie_goal']} kcal | used: {data['total_calories']} kcal)")
             for it in data["items"]:
-                print(
-                    f"    • {it['foodName']:12s}  {it['grams']:6d} g  "
-                    f"= {it['calories']:6.1f} kcal  [{it['foodCategory']}]"
-                )
+                print(f"    • {it['foodName']:12s}  {it['grams']:6d} g  = {it['calories']:6.1f} kcal  [{it['foodCategory']}]")
         print()
