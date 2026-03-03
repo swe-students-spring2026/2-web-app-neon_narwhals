@@ -47,7 +47,15 @@ body {
     padding-bottom: 4px;
     border-bottom: 1px solid #ccc;
 }
-.category-title .cat-display { text-transform: none; }
+
+.category-title  { 
+    text-transform: none;
+    display: flex;
+    align-items: center;
+}
+.category-title .cat-display {
+    justify-content: space-evenly;
+}
 .item-row {
     display: flex;
     align-items: center;
@@ -57,7 +65,15 @@ body {
 }
 .item-row:last-child { border-bottom: none; }
 .item-name { flex: 1; }
-.item-amount { width: 70px; text-align: right; color: #333; }
+.item-amount {
+     width: 70px; 
+     text-align: left;
+     color: #333; 
+    }
+.btn-checkbox {
+    margin-left: 10px;
+
+}
 .btn-delete {
     background: #000;
     color: #fff;
