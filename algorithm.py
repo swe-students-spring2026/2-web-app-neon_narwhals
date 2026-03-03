@@ -69,6 +69,32 @@ MEAL_CALORIE_SPLITS: dict[str, dict[str, float]] = {
     },
 }
 
+#Mongdb food_stats functions 
+#function for searching food information
+def search_food_data(food_name):
+    doc = food_db.foodstats.find_one({"Name": {"$regex": food_name, "$options": "i"}})
+    if doc:
+        doc["_id"] = str(doc["_id"])
+        return doc
+    else:
+        return None
+    
+#function for finding the category of the food
+def lookup_food_category(food_name):
+    doc = food_db.foodstats.find_one({"name": {"$regex": food_name, "$options": "i"}})
+    if doc:
+        return doc["Category"]
+    else:
+        return None
+
+#find the number of calories per serving
+def find_calories_per_serving(food_name):
+    doc = food_db.foodstats.find_one({"Name":{"$regex": food_name, "$options":"i"}})
+    if doc:
+        return doc["Calories"]/100
+    else:
+        return None
+
 
 def _parse_grams(amount: Any) -> float:
     match = re.search(r"[\d.]+", str(amount))
