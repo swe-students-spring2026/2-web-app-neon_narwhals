@@ -8,7 +8,7 @@ See the README.md file for instructions how to set up and run the app in develop
 import os
 import datetime
 #from flask import Flask, render_template, request, redirect, url_for
-from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, Blueprint, session
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, session
 import pymongo
 from bson.objectid import ObjectId
 from dotenv import load_dotenv, dotenv_values
@@ -48,6 +48,7 @@ def create_app():
     Create and configure the Flask application.
     returns: app: the Flask application object
     """
+
     app = Flask(__name__)
     # Configure template loaders for multiple directories
     app.jinja_loader = ChoiceLoader([
@@ -101,7 +102,6 @@ def create_app():
         if not username:
             return redirect(url_for("login"))
         food_docs = list(db.foods.find({"username": username}).sort("created_at", -1))
-        
         # Check if request wants JSON (API usage)
         if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
             # Convert ObjectId to string for JSON serialization
@@ -113,7 +113,6 @@ def create_app():
         weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
         weekday_display = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
         # Get current day for highlighting
-        import datetime
         today_weekday = datetime.datetime.now().strftime('%A').lower()
         for i, weekday in enumerate(weekdays):
             # Filter foods for this weekday
@@ -135,7 +134,7 @@ def create_app():
         week_label = "Current Week"
         week_sub_label = datetime.datetime.now().strftime("%B %d, %Y")
         # Return HTML template for web interface
-        return render_template("simple-week.html", 
+        return render_template("simple-week.html",
                              week_days=week_days,
                              week_label=week_label,
                              week_sub_label=week_sub_label,
@@ -155,17 +154,14 @@ def create_app():
         username = session.get('username')
         if not username:
             return redirect(url_for("login"))
-        
         # Get foods for this specific day
         day_foods = list(db.foods.find({"weekday": weekday.lower(), "username": username}).sort("created_at", -1))
-        
         # Organize by meal time
         meals = {
             'breakfast': [food for food in day_foods if food.get('time_in_day', '').lower() == 'breakfast'],
             'lunch': [food for food in day_foods if food.get('time_in_day', '').lower() == 'lunch'],
             'dinner': [food for food in day_foods if food.get('time_in_day', '').lower() == 'dinner']
         }
-        
         # Calculate basic summary (simplified for now)
         total_calories = sum(food.get('calorie_amount', 0) for food in day_foods)
         total_protein = sum(food.get('food_amount', 0) for food in day_foods if food.get('food_type') == 'protein')
@@ -173,8 +169,7 @@ def create_app():
         weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
         current_index = weekdays.index(weekday.lower()) if weekday.lower() in weekdays else 0
         prev_weekday = weekdays[(current_index - 1) % 7]
-        next_weekday = weekdays[(current_index + 1) % 7] 
-        import datetime
+        next_weekday = weekdays[(current_index + 1) % 7]
         weekday_display = weekday.title()
         date_label = datetime.datetime.now().strftime("%B %d, %Y")
         return render_template("simple-day.html",
@@ -200,7 +195,6 @@ def create_app():
         """
         weekday = request.args.get('weekday', 'monday')
         meal = request.args.get('meal', 'breakfast')
-        
         # Create a form template matching simple-week.html style
         return f'''
         <!DOCTYPE html>
@@ -488,7 +482,7 @@ def create_app():
             if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
                 return jsonify({"error": "Food item not found"}), 404
             else:
-                return f"<h1>Error: Food item not found</h1><a href='/'>Back to Home</a>", 404 
+                return f"<h1>Error: Food item not found</h1><a href='/'>Back to Home</a>", 404
         # Handle JSON API requests
         if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
             food_doc['_id'] = str(food_doc['_id'])
@@ -604,6 +598,7 @@ def create_app():
                 "time_in_day": data["time_in_day"],
                 "created_at": datetime.datetime.utcnow(),
             }
+
             result = db.foods.update_one({"_id": ObjectId(food_id), "username": username}, {"$set": updated_food})
             if result.matched_count > 0:
                 return jsonify({"message": "Food updated successfully"})
@@ -627,6 +622,7 @@ def create_app():
                 "time_in_day": time_in_day,
                 "created_at": datetime.datetime.utcnow(),
             }
+
             result = db.foods.update_one({"_id": ObjectId(food_id), "username": username}, {"$set": updated_food})
             if result.matched_count > 0:
                 return redirect(url_for("day_view", weekday=weekday))
@@ -694,20 +690,22 @@ def create_app():
             JSON response or HTML template with error message.
         """
         # Handle JSON API requests
-    if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
+        if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
             return jsonify({"error": str(e)}), 500
 
     @app.errorhandler(Exception)
     def handle_error(e):
         return str(e), 500
     return app
+
+
 app = create_app()
+
 # Simple login routes (defined after app creation)
 @app.route("/login")
 def login():
     """Login page for user selection"""
     return render_template("login.html")
-
 @app.route("/create_user", methods=["POST"])
 def create_user():
     """Create a new user account"""
@@ -747,6 +745,7 @@ def get_users():
     users = list(app.db.users.find({}, {"username": 1, "_id": 0}))
     usernames = [user["username"] for user in users]
     return jsonify({"users": usernames})
+
 @app.route("/logout")
 def logout():
     """Logout current user"""
