@@ -125,4 +125,3 @@ def grocery_list():
 
 
 from flask import send_from_directory
-
