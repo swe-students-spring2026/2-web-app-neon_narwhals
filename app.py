@@ -8,12 +8,13 @@ See the README.md file for instructions how to set up and run the app in develop
 import os
 import datetime
 #from flask import Flask, render_template, request, redirect, url_for
-from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, Blueprint, session
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_from_directory, session
 import pymongo
 from bson.objectid import ObjectId
 from dotenv import load_dotenv, dotenv_values
-from grocery import grocery_bp
 from jinja2 import ChoiceLoader, FileSystemLoader
+from grocery import grocery_bp
+
 
 
 load_dotenv()  # load environment variables from .env file
@@ -29,7 +30,6 @@ class Food:
         self.weekday = weekday  # monday, tuesday, etc.
         self.time_in_day = time_in_day  # breakfast, lunch, dinner
         self.created_at = datetime.datetime.utcnow()
-    
     def to_dict(self):
         """Convert Food object to dictionary for MongoDB storage."""
         return {
@@ -50,30 +50,25 @@ def create_app():
     """
 
     app = Flask(__name__)
-    
     # Configure template loaders for multiple directories
     app.jinja_loader = ChoiceLoader([
         FileSystemLoader('templates'),  # For login.html
         FileSystemLoader('weeklyDisplay'),  # For existing templates
     ])
-    
     # load flask config from env variables
     config = dotenv_values()
     app.config.from_mapping(config)
-    
     # Set up session secret key
     app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 
     cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
     db = cxn[os.getenv("MONGO_DBNAME")]
-    
     # Attach db to app for use in routes defined outside create_app
     app.db = db
 
     try:
         cxn.admin.command("ping")
         print(" *", "Connected to MongoDB!")
-        
         # Create a sample Food object and insert it into the database
         sample_food = Food(
             name="beef",
@@ -83,7 +78,6 @@ def create_app():
             weekday="monday",
             time_in_day="dinner"
         )
-        
         # Check if this food item already exists to avoid duplicates
         existing_food = db.foods.find_one({"name": sample_food.name, "weekday": sample_food.weekday, "time_in_day": sample_food.time_in_day})
         if not existing_food:
@@ -91,12 +85,10 @@ def create_app():
             print(" *", f"Sample food '{sample_food.name}' created and stored in database!")
         else:
             print(" *", f"Sample food '{sample_food.name}' already exists in database.")
-            
     except Exception as e:
         print(" * MongoDB connection error:", e)
 
     app.register_blueprint(grocery_bp)
-    
     @app.route("/")
     @app.route("/week")
     def home():
@@ -109,36 +101,28 @@ def create_app():
         username = session.get('username')
         if not username:
             return redirect(url_for("login"))
-        
         food_docs = list(db.foods.find({"username": username}).sort("created_at", -1))
-        
         # Check if request wants JSON (API usage)
         if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
             # Convert ObjectId to string for JSON serialization
             for doc in food_docs:
                 doc['_id'] = str(doc['_id'])
             return jsonify({"foods": food_docs})
-        
         # Organize foods by weekday and meal time for weekly view
         week_days = []
         weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
         weekday_display = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        
         # Get current day for highlighting
-        import datetime
         today_weekday = datetime.datetime.now().strftime('%A').lower()
-        
         for i, weekday in enumerate(weekdays):
             # Filter foods for this weekday
             day_foods = [food for food in food_docs if food.get('weekday', '').lower() == weekday]
-            
             # Organize by meal time
             meals = {
                 'breakfast': [food for food in day_foods if food.get('time_in_day', '').lower() == 'breakfast'],
                 'lunch': [food for food in day_foods if food.get('time_in_day', '').lower() == 'lunch'],
                 'dinner': [food for food in day_foods if food.get('time_in_day', '').lower() == 'dinner']
             }
-            
             day_data = {
                 'name': weekday_display[i],
                 'full_name': weekday,
@@ -146,13 +130,11 @@ def create_app():
                 'meals': meals
             }
             week_days.append(day_data)
-        
         # Week navigation data
         week_label = "Current Week"
         week_sub_label = datetime.datetime.now().strftime("%B %d, %Y")
-        
         # Return HTML template for web interface
-        return render_template("simple-week.html", 
+        return render_template("simple-week.html",
                              week_days=week_days,
                              week_label=week_label,
                              week_sub_label=week_sub_label,
@@ -172,31 +154,24 @@ def create_app():
         username = session.get('username')
         if not username:
             return redirect(url_for("login"))
-        
         # Get foods for this specific day
         day_foods = list(db.foods.find({"weekday": weekday.lower(), "username": username}).sort("created_at", -1))
-        
         # Organize by meal time
         meals = {
             'breakfast': [food for food in day_foods if food.get('time_in_day', '').lower() == 'breakfast'],
             'lunch': [food for food in day_foods if food.get('time_in_day', '').lower() == 'lunch'],
             'dinner': [food for food in day_foods if food.get('time_in_day', '').lower() == 'dinner']
         }
-        
         # Calculate basic summary (simplified for now)
         total_calories = sum(food.get('calorie_amount', 0) for food in day_foods)
         total_protein = sum(food.get('food_amount', 0) for food in day_foods if food.get('food_type') == 'protein')
-        
         # Day navigation
         weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
         current_index = weekdays.index(weekday.lower()) if weekday.lower() in weekdays else 0
         prev_weekday = weekdays[(current_index - 1) % 7]
         next_weekday = weekdays[(current_index + 1) % 7]
-        
-        import datetime
         weekday_display = weekday.title()
         date_label = datetime.datetime.now().strftime("%B %d, %Y")
-        
         return render_template("simple-day.html",
                              weekday=weekday.lower(),
                              weekday_display=weekday_display,
@@ -220,7 +195,6 @@ def create_app():
         """
         weekday = request.args.get('weekday', 'monday')
         meal = request.args.get('meal', 'breakfast')
-        
         # Create a form template matching simple-week.html style
         return f'''
         <!DOCTYPE html>
@@ -391,7 +365,6 @@ def create_app():
         username = session.get('username')
         if not username:
             return redirect(url_for("login"))
-        
         db.foods.delete_many({"weekday": weekday.lower(), "username": username})
         return redirect(url_for("home"))
 
@@ -408,7 +381,6 @@ def create_app():
         username = session.get('username')
         if not username:
             return redirect(url_for("login"))
-        
         db.foods.delete_many({"weekday": weekday.lower(), "time_in_day": meal.lower(), "username": username})
         return redirect(url_for("day_view", weekday=weekday))
 
@@ -434,7 +406,6 @@ def create_app():
         username = session.get('username')
         if not username:
             return redirect(url_for("login"))
-        
         db.foods.delete_many({"username": username})
         return redirect(url_for("home"))
 
@@ -456,11 +427,9 @@ def create_app():
         username = session.get('username')
         if not username:
             return redirect(url_for("login"))
-        
         # Handle JSON API requests
         if request.is_json:
             data = request.get_json()
-            
             food = Food(
                 data["name"],
                 data["food_type"],
@@ -469,12 +438,10 @@ def create_app():
                 data["weekday"],
                 data["time_in_day"]
             )
-            
             food_dict = food.to_dict()
             food_dict["username"] = username
             result = db.foods.insert_one(food_dict)
             return jsonify({"message": "Food created successfully", "id": str(result.inserted_id)})
-        
         # Handle HTML form submissions
         else:
             name = request.form["name"]
@@ -510,19 +477,16 @@ def create_app():
         username = session.get('username')
         if not username:
             return redirect(url_for("login"))
-        
         food_doc = db.foods.find_one({"_id": ObjectId(food_id), "username": username})
         if not food_doc:
             if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
                 return jsonify({"error": "Food item not found"}), 404
             else:
                 return f"<h1>Error: Food item not found</h1><a href='/'>Back to Home</a>", 404
-        
         # Handle JSON API requests
         if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
             food_doc['_id'] = str(food_doc['_id'])
             return jsonify({"food": food_doc})
-        
         # Return HTML form for editing
         return f'''
         <!DOCTYPE html>
@@ -622,11 +586,9 @@ def create_app():
         username = session.get('username')
         if not username:
             return redirect(url_for("login"))
-        
         # Handle JSON API requests
         if request.is_json:
             data = request.get_json()
-            
             updated_food = {
                 "name": data["name"],
                 "food_type": data["food_type"],
@@ -638,12 +600,10 @@ def create_app():
             }
 
             result = db.foods.update_one({"_id": ObjectId(food_id), "username": username}, {"$set": updated_food})
-            
             if result.matched_count > 0:
                 return jsonify({"message": "Food updated successfully"})
             else:
                 return jsonify({"error": "Food item not found"}), 404
-        
         # Handle HTML form submissions
         else:
             name = request.form["name"]
@@ -664,7 +624,6 @@ def create_app():
             }
 
             result = db.foods.update_one({"_id": ObjectId(food_id), "username": username}, {"$set": updated_food})
-            
             if result.matched_count > 0:
                 return redirect(url_for("day_view", weekday=weekday))
             else:
@@ -683,20 +642,16 @@ def create_app():
         username = session.get('username')
         if not username:
             return redirect(url_for("login"))
-        
         # Get the food item first to know which day to redirect to
         food_doc = db.foods.find_one({"_id": ObjectId(food_id), "username": username})
         weekday = food_doc.get('weekday', 'monday') if food_doc else 'monday'
-        
         result = db.foods.delete_one({"_id": ObjectId(food_id), "username": username})
-        
         # Handle JSON API requests
         if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
             if result.deleted_count > 0:
                 return jsonify({"message": "Food deleted successfully"})
             else:
                 return jsonify({"error": "Food item not found"}), 404
-        
         # Handle HTML requests - redirect to day view if we came from day view, otherwise home
         referrer = request.headers.get('Referer', '')
         if '/day/' in referrer:
@@ -719,14 +674,12 @@ def create_app():
         username = session.get('username')
         if not username:
             return jsonify({"error": "Authentication required"}), 401
-        
         result = db.foods.delete_many({"name": food_name, "weekday": weekday, "time_in_day": time_in_day, "username": username})
         return jsonify({"message": f"Deleted {result.deleted_count} food items"})
 
     @app.route('/groceryDisplay/<path:filename>')
     def grocery_display_static(filename):
         return send_from_directory('groceryDisplay', filename)
-    
     @app.errorhandler(Exception)
     def handle_error(e):
         """
@@ -753,27 +706,23 @@ app = create_app()
 def login():
     """Login page for user selection"""
     return render_template("login.html")
-
 @app.route("/create_user", methods=["POST"])
 def create_user():
     """Create a new user account"""
     username = request.form.get("username", "").strip()
     if not username:
         return redirect(url_for("login"))
-    
     # Check if username already exists
     existing_user = app.db.users.find_one({"username": username})
     if existing_user:
         # User exists, just login
         session['username'] = username
         return redirect(url_for("home"))
-    
     # Create new user
     app.db.users.insert_one({
         "username": username,
         "created_at": datetime.datetime.utcnow()
     })
-    
     session['username'] = username
     return redirect(url_for("home"))
 
@@ -783,13 +732,11 @@ def login_user():
     username = request.form.get("username", "").strip()
     if not username:
         return redirect(url_for("login"))
-    
     # Verify user exists
     user = app.db.users.find_one({"username": username})
     if user:
         session['username'] = username
         return redirect(url_for("home"))
-    
     return redirect(url_for("login"))
 
 @app.route("/get_users")
