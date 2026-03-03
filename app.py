@@ -726,7 +726,7 @@ def create_app():
     @app.route('/groceryDisplay/<path:filename>')
     def grocery_display_static(filename):
         return send_from_directory('groceryDisplay', filename)
-    
+      
     @app.errorhandler(Exception)
     def handle_error(e):
         """
