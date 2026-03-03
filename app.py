@@ -392,14 +392,45 @@ def create_app():
     @app.route("/swap-day/<weekday>", methods=["POST"])
     def swap_day(weekday):
         """
-        Route to swap meals within a day (placeholder functionality).
+        Route to swap meals within a day
         Args:
             weekday (str): The weekday to swap
         Returns:
             Redirect to day view
         """
-        # Placeholder - could implement meal swapping logic here
         return redirect(url_for("day_view", weekday=weekday))
+
+    @app.route("/week/swap/<weekday>/<direction>", methods=["POST"])
+    def swap_week_day(weekday, direction):
+        """
+        Swap all meals for one day with the day above or below it in the week view
+
+        Args:
+            weekday (str): name like 'monday', 'tuesday', etc. (from template day.full_name)
+            direction (str): 'up' or 'down'
+        """
+        weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        day = weekday.lower()
+        if day not in weekdays:
+            return redirect(url_for("home"))
+
+        idx = weekdays.index(day)
+        if direction == "up":
+            if idx == 0:
+                return redirect(url_for("home"))
+            other = weekdays[idx - 1]
+        else:  # treat anything else as down
+            if idx == len(weekdays) - 1:
+                return redirect(url_for("home"))
+            other = weekdays[idx + 1]
+
+        # swap weekday field between this day and the neighbour using a temporary label
+        tmp = "__tmp_swap__"
+        db.foods.update_many({"weekday": day}, {"$set": {"weekday": tmp}})
+        db.foods.update_many({"weekday": other}, {"$set": {"weekday": day}})
+        db.foods.update_many({"weekday": tmp}, {"$set": {"weekday": other}})
+
+        return redirect(url_for("home"))
 
     @app.route("/delete-week", methods=["POST"])
     def delete_week():
