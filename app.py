@@ -646,12 +646,7 @@ def create_app():
         db.foods.delete_many({"username": username})
         return redirect(url_for("home"))
 
-    @app.route('/<path:filename>')
-    def serve_static(filename):
-        """
-        Serve CSS and other static files from weeklyDisplay directory.
-        """
-        return send_from_directory('weeklyDisplay', filename)
+ 
 
     @app.route("/create", methods=["POST"])
     def create_food():
@@ -913,10 +908,73 @@ def create_app():
             return redirect(url_for("login"))
         result = db.foods.delete_many({"name": food_name, "weekday": weekday, "time_in_day": time_in_day, "username": username})
         return redirect(url_for("home"))
-
+    
     @app.route('/groceryDisplay/<path:filename>')
     def grocery_display_static(filename):
         return send_from_directory('groceryDisplay', filename)
+        # Simple login routes (defined after app creation)
+    @app.route("/login")
+    def login():
+        """Login page for user selection"""
+        return render_template("login.html")
+    @app.route("/create_user", methods=["POST"])
+    def create_user():
+        """Create a new user account"""
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+        if not username:
+            return redirect(url_for("login"))
+        # Check if username already exists
+        existing_user = app.db.users.find_one({"username": username})
+        if existing_user:
+            # User exists, just login
+            session['username'] = username
+            return redirect(url_for("home"))
+        # Create new user
+        app.db.users.insert_one({
+            "username": username,
+            "passowrd": password,
+            "created_at": datetime.datetime.utcnow()
+        })
+        session['username'] = username
+        return redirect(url_for("home"))
+
+    @app.route("/login_user", methods=["POST"])
+    def login_user():
+        """Login with existing user"""
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+        if not username:
+            return redirect(url_for("login"))
+        # Verify user exists
+        user = app.db.users.find_one({"username": username})
+        if user and user["password"]==password:
+            session['username'] = username
+            return redirect(url_for("home"))
+        return redirect(url_for("login"))
+    @app.route("/logout")
+    def logout():
+        """Logout current user"""
+        session.clear()
+        return redirect(url_for("login"))
+    @app.route("/existing_user")
+    def existing_user():
+        """Login page existing users"""
+        return render_template("existing-user.html")
+    @app.route("/existing_user", methods=["POST"])
+    def existingr():
+        """Login with existing user"""
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+        if not username:
+            return redirect(url_for("login"))
+        # Verify user exists
+        user = app.db.users.find_one({"username": username})
+        if user and user["password"]==password:
+            session['username'] = username
+            return redirect(url_for("home"))
+        else:
+            return render_template("existing_user.html", error="Wrong username or password")
     @app.errorhandler(Exception)
     def handle_error(e):
         """
@@ -930,6 +988,12 @@ def create_app():
         if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
             return jsonify({"error": str(e)}), 500
 
+    @app.route('/<path:filename>')
+    def serve_static(filename):
+        """
+        Serve CSS and other static files from weeklyDisplay directory.
+        """
+        return send_from_directory('weeklyDisplay', filename)
     @app.errorhandler(Exception)
     def handle_error(e):
         return str(e), 500
@@ -938,70 +1002,7 @@ def create_app():
 
 app = create_app()
 
-# Simple login routes (defined after app creation)
-@app.route("/login")
-def login():
-    """Login page for user selection"""
-    return render_template("login.html")
-@app.route("/create_user", methods=["POST"])
-def create_user():
-    """Create a new user account"""
-    username = request.form.get("username", "").strip()
-    password = request.form.get("password", "").strip()
-    if not username:
-        return redirect(url_for("login"))
-    # Check if username already exists
-    existing_user = app.db.users.find_one({"username": username})
-    if existing_user:
-        # User exists, just login
-        session['username'] = username
-        return redirect(url_for("home"))
-    # Create new user
-    app.db.users.insert_one({
-        "username": username,
-        "passowrd": password,
-        "created_at": datetime.datetime.utcnow()
-    })
-    session['username'] = username
-    return redirect(url_for("home"))
 
-@app.route("/login_user", methods=["POST"])
-def login_user():
-    """Login with existing user"""
-    username = request.form.get("username", "").strip()
-    password = request.form.get("password", "").strip()
-    if not username:
-        return redirect(url_for("login"))
-    # Verify user exists
-    user = app.db.users.find_one({"username": username})
-    if user and user["password"]==password:
-        session['username'] = username
-        return redirect(url_for("home"))
-    return redirect(url_for("login"))
-@app.route("/logout")
-def logout():
-    """Logout current user"""
-    session.clear()
-    return redirect(url_for("login"))
-
-@app.route("/existing_user")
-def existing_user():
-    """Login page existing users"""
-    return render_template("existing-user.html")
-@app.route("/existing_user", methods=["POST"])
-def existingr():
-    """Login with existing user"""
-    username = request.form.get("username", "").strip()
-    password = request.form.get("password", "").strip()
-    if not username:
-        return redirect(url_for("login"))
-    # Verify user exists
-    user = app.db.users.find_one({"username": username})
-    if user and user["password"]==password:
-        session['username'] = username
-        return redirect(url_for("home"))
-    else:
-        return render_template("existing_user.html", error="Wrong username or password")
 if __name__ == "__main__":
     FLASK_PORT = int(os.getenv("FLASK_PORT", "3000"))
     FLASK_ENV = os.getenv("FLASK_ENV")

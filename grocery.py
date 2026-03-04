@@ -9,8 +9,7 @@ from algorithm import (
     get_food_category,
     lookup_food_category,
     get_calories_per_gram,
-    parse_grams,
-    dry_run
+    parse_grams
 )
 '''
 This module defines the grocery blueprint for the Flask application. It handles routes related to the grocery list, including displaying the current list, adding items, saving weekly history, and viewing past grocery lists.
