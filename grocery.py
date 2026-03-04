@@ -98,7 +98,8 @@ def grocery_history_page():
         week['_id'] = str(week['_id'])
         for item in week.get('items', []):
             item['_id'] = str(item['_id'])
-    return render_template("grocery-history.html", history=history)
+    today_weekday =datetime.datetime.now().strftime('%A').lower()
+    return render_template("grocery-history.html", history=history,today_weekday=today_weekday)
 
 @grocery_bp.route("/save-week") #hasn't implement function yet
 def save_week():
@@ -162,9 +163,8 @@ def grocery_list():
         if category not in categories_dict:
             categories_dict[category] = []
         categories_dict[category].append(item)
-
- 
-    return render_template("grocery-list.html", categories=categories_dict, total_items = len(items))
+    today_weekday =datetime.datetime.now().strftime('%A').lower()
+    return render_template("grocery-list.html", categories=categories_dict, total_items = len(items), today_weekday=today_weekday)
 
 
 @grocery_bp.route('/<path:filename>')

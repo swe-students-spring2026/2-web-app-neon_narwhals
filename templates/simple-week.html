@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=393, initial-scale=1.0" />
   <title>MealPrep – Week</title>
   <!-- base styles (status bar, shared bottom nav, etc.) -->
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="/styles.css" />
   <!-- week-specific layout on top of the shared styles -->
-  <link rel="stylesheet" href="week.css" />
+  <link rel="stylesheet" href="/week.css" />
 </head>
 <body>
 
@@ -108,7 +108,7 @@
   <!-- Bottom Nav -->
   <nav class="bottom-nav">
     <a href="/week" class="nav-tab active">Week</a>
-    <a href="/simple-day.html" class="nav-tab">Day</a>
+    <a href="/day/{{ today_weekday }}" class="nav-tab">Day</a>
     <a href="/grocery-list" class="nav-tab">Grocery</a>
     <a href="/grocery-history" class="nav-tab">History</a>
   </nav>
