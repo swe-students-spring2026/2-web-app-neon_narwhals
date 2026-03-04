@@ -41,15 +41,19 @@
     <!-- ── BREAKFAST ── -->
     {% set bf_calories = meals.breakfast | sum(attribute='calorie_amount') %}
     <div class="meal-row">
-      <div class="meal-type">Breakfast</div>
-      <div class="meal-items">
+      <div class="meal-header">
+        <div class="meal-type">Breakfast</div>
         <div class="meal-calories">{{ bf_calories }} cal</div>
+      </div>
+      <div class="meal-items">
         {% for food in meals.breakfast %}
           <div class="food-item">
             {{ food.name | title }} ({{ food.food_amount }}g)
+            {% if not food.get('is_generated', False) %}
             <form action="/delete-by-content/{{ food.name }}/{{ weekday }}/breakfast" method="POST" style="display:inline;">
               <button class="btn-small" type="submit" onclick="return confirm('Delete {{ food.name }}?')">×</button>
             </form>
+            {% endif %}
           </div>
         {% endfor %}
       </div>
@@ -58,15 +62,19 @@
     <!-- ── LUNCH ── -->
     {% set ln_calories = meals.lunch | sum(attribute='calorie_amount') %}
     <div class="meal-row">
-      <div class="meal-type">Lunch</div>
-      <div class="meal-items">
+      <div class="meal-header">
+        <div class="meal-type">Lunch</div>
         <div class="meal-calories">{{ ln_calories }} cal</div>
+      </div>
+      <div class="meal-items">
         {% for food in meals.lunch %}
           <div class="food-item">
             {{ food.name | title }} ({{ food.food_amount }}g)
+            {% if not food.get('is_generated', False) %}
             <form action="/delete-by-content/{{ food.name }}/{{ weekday }}/lunch" method="POST" style="display:inline;">
               <button class="btn-small" type="submit" onclick="return confirm('Delete {{ food.name }}?')">×</button>
             </form>
+            {% endif %}
           </div>
         {% endfor %}
       </div>
@@ -75,25 +83,24 @@
     <!-- ── DINNER ── -->
     {% set dn_calories = meals.dinner | sum(attribute='calorie_amount') %}
     <div class="meal-row">
-      <div class="meal-type">Dinner</div>
-      <div class="meal-items">
+      <div class="meal-header">
+        <div class="meal-type">Dinner</div>
         <div class="meal-calories">{{ dn_calories }} cal</div>
+      </div>
+      <div class="meal-items">
         {% for food in meals.dinner %}
           <div class="food-item">
             {{ food.name | title }} ({{ food.food_amount }}g)
+            {% if not food.get('is_generated', False) %}
             <form action="/delete-by-content/{{ food.name }}/{{ weekday }}/dinner" method="POST" style="display:inline;">
               <button class="btn-small" type="submit" onclick="return confirm('Delete {{ food.name }}?')">×</button>
             </form>
+            {% endif %}
           </div>
         {% endfor %}
       </div>
     </div>
 
-    </div>
-
-    <!-- Bottom Actions -->
-    <div class="delete-week-row">
-      <a href="/grocery/new" class="btn-outline-full">+ New Grocery List</a>
     </div>
 
   </div>

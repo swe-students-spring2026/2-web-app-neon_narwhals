@@ -14,7 +14,7 @@
 .page-header {
   text-align: center;
   padding: 12px 0 16px 0;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 600;
   border-bottom: 1px solid #000;
 }
@@ -22,7 +22,7 @@
 .day-summary {
   text-align: center;
   padding: 10px 0;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: bold;
   background: #000;
   color: #fff;
@@ -52,7 +52,7 @@
 }
 
 .day-name {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -66,7 +66,7 @@
   background: none;
   border: 1px solid currentColor;
   padding: 3px 8px;
-  font-size: 11px;
+  font-size: 13px;
   cursor: pointer;
   font-family: inherit;
   color: inherit;
@@ -79,16 +79,21 @@
   display: flex;
   padding: 7px 20px;
   border-bottom: 1px solid #eee;
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .meal-row:last-child { border-bottom: none; }
 
-.meal-type {
+.meal-header {
+  display: flex;
+  flex-direction: column;
   width: 80px;
-  font-weight: 600;
-  font-size: 12px;
   flex-shrink: 0;
+}
+
+.meal-type {
+  font-weight: 600;
+  font-size: 15px;
 }
 
 .meal-items {
@@ -98,7 +103,7 @@
 
 .meal-calories {
   font-weight: bold;
-  font-size: 14px;
+  font-size: 17px;
   color: #000;
   margin-bottom: 4px;
   padding: 6px 8px;
@@ -136,7 +141,7 @@
   color: #fff;
   border: none;
   padding: 12px;
-  font-size: 14px;
+  font-size: 16px;
   text-align: center;
   cursor: pointer;
   font-family: inherit;
@@ -151,7 +156,7 @@
   color: #000;
   border: 1px solid #000;
   padding: 12px;
-  font-size: 14px;
+  font-size: 16px;
   text-align: center;
   cursor: pointer;
   font-family: inherit;
