@@ -1,6 +1,6 @@
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import pymongo
@@ -11,7 +11,6 @@ load_dotenv()
 
 cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
 food_db = cxn[os.getenv("MONGO_DBNAME")]
-weekly_db = cxn["weekly_db"]
 
 
 DAYS: list[str] = [
@@ -32,49 +31,47 @@ CALORIE_GOALS: dict[str, float] = {
 
 MEAL_COMPOSITION: dict[str, dict[str, int]] = {
     "Breakfast": {
-        "Fruits": 1,
+        "Fruit": 1,
         "Dairy": 1,
-        "Protein Foods": 1,
+        "Protein": 1,
     },
     "Lunch": {
-        "Protein Foods": 1,
-        "Vegetables": 2,
-        "Grains": 1,
-        "Fruits": 1,
+        "Protein": 1,
+        "Vegetable": 2,
+        "Grain": 1,
+        "Fruit": 1,
         "Dairy": 1,
     },
     "Dinner": {
-        "Protein Foods": 1,
-        "Vegetables": 2,
-        "Grains": 1,
-        "Fruits": 1,
+        "Protein": 1,
+        "Vegetable": 2,
+        "Grain": 1,
+        "Fruit": 1,
         "Dairy": 1,
     },
 }
 
 MEAL_CALORIE_SPLITS: dict[str, dict[str, float]] = {
     "Breakfast": {
-        "Protein Foods": 0.35,
+        "Protein": 0.35,
         "Dairy": 0.40,
-        "Fruits": 0.25,
+        "Fruit": 0.25,
     },
     "Lunch": {
-        "Protein Foods": 0.35,
-        "Vegetables": 0.30,
-        "Grains": 0.25,
-        "Fruits": 0.05,
+        "Protein": 0.35,
+        "Vegetable": 0.30,
+        "Grain": 0.25,
+        "Fruit": 0.05,
         "Dairy": 0.05,
     },
     "Dinner": {
-        "Protein Foods": 0.35,
-        "Vegetables": 0.30,
-        "Grains": 0.25,
-        "Fruits": 0.05,
+        "Protein": 0.35,
+        "Vegetable": 0.30,
+        "Grain": 0.25,
+        "Fruit": 0.05,
         "Dairy": 0.05,
     },
 }
-
-
 
 
 def search_food_data(food_name):
@@ -87,7 +84,6 @@ def search_food_data(food_name):
         return None
 
 
-
 def lookup_food_category(food_name):
     """function for finding the category of the food"""
     doc = food_db.foodstats.find_one({"name": {"$regex": food_name, "$options": "i"}})
@@ -95,6 +91,8 @@ def lookup_food_category(food_name):
         return doc["Category"]
     else:
         return None
+
+
 def find_calories_per_serving(food_name):
     """find the number of calories per serving"""
     doc = food_db.foodstats.find_one({"Name": {"$regex": food_name, "$options": "i"}})
@@ -104,7 +102,7 @@ def find_calories_per_serving(food_name):
         return None
 
 
-def _parse_grams(amount: Any) -> float:
+def parse_grams(amount: Any) -> float:
     match = re.search(r"[\d.]+", str(amount))
     return float(match.group()) if match else 0.0
 
@@ -127,17 +125,17 @@ def get_food_category(food_name: str) -> str:
     return "Unknown"
 
 
-def _build_food_pool(grocery_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def build_food_pool(grocery_items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     pool: list[dict[str, Any]] = []
     for item in grocery_items:
         name = item["name"]
         cal_per_gram = get_calories_per_gram(name)
-        total_grams = _parse_grams(item["amount"])
+        total_grams = parse_grams(item["amount"])
         pool.append(
             {
                 "foodName": name,
                 "foodCategory": get_food_category(name),
-                "isBreakfast": bool(item.get("breakfast", False)),
+                "isBreakfast": item.get("time_in_day", "").lower() == "breakfast",
                 "remaining_grams": total_grams,
                 "cal_per_gram": cal_per_gram,
                 "remaining_calories": cal_per_gram * total_grams,
@@ -146,7 +144,7 @@ def _build_food_pool(grocery_items: list[dict[str, Any]]) -> list[dict[str, Any]
     return pool
 
 
-def _fill_meal_slot(
+def fill_meal_slot(
     pool: list[dict[str, Any]],
     meal_name: str,
     calorie_goal: float,
@@ -167,14 +165,7 @@ def _fill_meal_slot(
         budget = cat_budget[category]
         items_used = 0
 
-        candidates = [
-            f
-            for f in pool
-            if f["foodCategory"] == category
-            and f["isBreakfast"] == is_breakfast
-            and f["remaining_grams"] > 0
-            and f["cal_per_gram"] > 0
-        ]
+        candidates = [f for f in pool if f["foodCategory"] == category and f["isBreakfast"] == is_breakfast and f["remaining_grams"] > 0 and f["cal_per_gram"] > 0]
 
         candidates.sort(key=lambda f: f["remaining_calories"], reverse=True)
 
@@ -212,11 +203,11 @@ def _fill_meal_slot(
 
 
 def build_meal_plan(user_id: str) -> dict[str, Any]:
-    grocery_items = list(current_week.find({"user_id": user_id}))
+    grocery_items = list(current_week.find({"username": user_id}))
     if not grocery_items:
         return {}
 
-    pool = _build_food_pool(grocery_items)
+    pool = build_food_pool(grocery_items)
     weekly_plan: dict[str, Any] = {}
 
     for day in DAYS:
@@ -225,7 +216,7 @@ def build_meal_plan(user_id: str) -> dict[str, Any]:
 
         for meal in ("Breakfast", "Lunch", "Dinner"):
             goal = CALORIE_GOALS[meal]
-            items, total_cal = _fill_meal_slot(pool, meal, goal, used_protein_today)
+            items, total_cal = fill_meal_slot(pool, meal, goal, used_protein_today)
             daily_plan[meal] = {
                 "items": items,
                 "total_calories": total_cal,
@@ -239,12 +230,12 @@ def build_meal_plan(user_id: str) -> dict[str, Any]:
 
 
 def push_weekly_plan(user_id: str, plan: dict[str, Any]) -> None:
-    weekly_db.meal_plans.update_one(
-        {"user_id": user_id},
+    food_db.weeklymeals.update_one(
+        {"username": user_id},
         {
             "$set": {
                 "plan": plan,
-                "updated_at": datetime.utcnow(),
+                "updated_at": datetime.now(timezone.utc),
             }
         },
         upsert=True,
@@ -266,7 +257,7 @@ def dry_run(grocery_items: list[dict[str, Any]]) -> dict[str, Any]:
         key = item["name"].lower()
         stub = STUB_USDA.get(key, {"cal_per_gram": 1.0, "category": "Unknown"})
         cpg = stub["cal_per_gram"]
-        grams = _parse_grams(item["amount"])
+        grams = parse_grams(item["amount"])
         pool.append(
             {
                 "foodName": item["name"],
@@ -285,7 +276,7 @@ def dry_run(grocery_items: list[dict[str, Any]]) -> dict[str, Any]:
 
         for meal in ("Breakfast", "Lunch", "Dinner"):
             goal = CALORIE_GOALS[meal]
-            items, total = _fill_meal_slot(pool, meal, goal, used_protein_today)
+            items, total = fill_meal_slot(pool, meal, goal, used_protein_today)
             daily_plan[meal] = {
                 "items": items,
                 "total_calories": total,
@@ -298,8 +289,6 @@ def dry_run(grocery_items: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 if __name__ == "__main__":
-    import json
-
     sample = [
         {"name": "Beef", "amount": "500", "breakfast": False},
         {"name": "Milk", "amount": "1000", "breakfast": True},
@@ -315,13 +304,7 @@ if __name__ == "__main__":
     for day, meals in plan.items():
         print(f"── {day} ──")
         for meal_name, data in meals.items():
-            print(
-                f"  {meal_name}  (goal: {data['calorie_goal']} kcal | "
-                f"used: {data['total_calories']} kcal)"
-            )
+            print(f"  {meal_name}  (goal: {data['calorie_goal']} kcal | used: {data['total_calories']} kcal)")
             for it in data["items"]:
-                print(
-                    f"    • {it['foodName']:12s}  {it['grams']:6d} g  "
-                    f"= {it['calories']:6.1f} kcal  [{it['foodCategory']}]"
-                )
+                print(f"    • {it['foodName']:12s}  {it['grams']:6d} g  = {it['calories']:6.1f} kcal  [{it['foodCategory']}]")
         print()
