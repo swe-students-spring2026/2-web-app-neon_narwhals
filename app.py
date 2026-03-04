@@ -142,18 +142,21 @@ def create_app():
                              next_week_url="#",  # Placeholder for now
                              today_weekday=today_weekday)
 
+    @app.route("/day", defaults={'weekday': None})
     @app.route("/day/<weekday>")
     def day_view(weekday):
         """
         Route for individual day view for adding/editing meals.
         Args:
-            weekday (str): The weekday to display
+            weekday (str): The weekday to display, defaults to today if None
         Returns:
             HTML template with day-specific food form
         """
         username = session.get('username')
         if not username:
             return redirect(url_for("login"))
+        if weekday is None:
+            weekday = datetime.datetime.now().strftime('%A').lower()
         # Get foods for this specific day
         day_foods = list(db.foods.find({"weekday": weekday.lower(), "username": username}).sort("created_at", -1))
         # Organize by meal time
@@ -427,6 +430,43 @@ def create_app():
 
         return redirect(url_for("home"))
 
+    @app.route("/day/swap/<weekday>/<meal>/<direction>", methods=["POST"])
+    def swap_day_meal(weekday, meal, direction):
+        """
+        Swap a meal with the adjacent meal in the day view
+
+        Args:
+            weekday (str): name like 'monday', 'tuesday', etc.
+            meal (str): 'breakfast', 'lunch', or 'dinner'
+            direction (str): 'up' or 'down'
+        """
+        username = session.get('username')
+        if not username:
+            return redirect(url_for("login"))
+        
+        meals = ["breakfast", "lunch", "dinner"]
+        meal = meal.lower()
+        if meal not in meals:
+            return redirect(url_for("day_view", weekday=weekday))
+
+        idx = meals.index(meal)
+        if direction == "up":
+            if idx == 0:
+                return redirect(url_for("day_view", weekday=weekday))
+            target = meals[idx - 1]
+        else:  # down
+            if idx == len(meals) - 1:
+                return redirect(url_for("day_view", weekday=weekday))
+            target = meals[idx + 1]
+
+        # swap time_in_day field between this meal and the target using a temporary label
+        tmp = "__tmp_swap_meal__"
+        db.foods.update_many({"weekday": weekday.lower(), "time_in_day": meal, "username": username}, {"$set": {"time_in_day": tmp}})
+        db.foods.update_many({"weekday": weekday.lower(), "time_in_day": target, "username": username}, {"$set": {"time_in_day": meal}})
+        db.foods.update_many({"weekday": weekday.lower(), "time_in_day": tmp, "username": username}, {"$set": {"time_in_day": target}})
+
+        return redirect(url_for("day_view", weekday=weekday))
+
     @app.route("/delete-week", methods=["POST"])
     def delete_week():
         """
@@ -690,23 +730,23 @@ def create_app():
         else:
             return redirect(url_for("home"))
 
-    @app.route("/delete-by-content/<food_name>/<weekday>/<time_in_day>", methods=["DELETE"])
+    @app.route("/delete-by-content/<food_name>/<weekday>/<time_in_day>", methods=["POST"])
     def delete_by_content(food_name, weekday, time_in_day):
         """
-        Route for DELETE requests to delete food items by their name, weekday, and time.
+        Route for POST requests to delete food items by their name, weekday, and time.
         Deletes the specified food records from the database.
         Args:
             food_name (str): The name of the food item.
             weekday (str): The weekday of the food item.
             time_in_day (str): The time in day of the food item.
         Returns:
-            JSON response with success message and count of deleted items.
+            Redirect to home page.
         """
         username = session.get('username')
         if not username:
-            return jsonify({"error": "Authentication required"}), 401
+            return redirect(url_for("login"))
         result = db.foods.delete_many({"name": food_name, "weekday": weekday, "time_in_day": time_in_day, "username": username})
-        return jsonify({"message": f"Deleted {result.deleted_count} food items"})
+        return redirect(url_for("home"))
 
     @app.route('/groceryDisplay/<path:filename>')
     def grocery_display_static(filename):
