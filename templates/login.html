@@ -1,303 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Food Planner - Login</title>
-    <link rel="stylesheet" href="/week.css">
-    <style>
-        .login-container {
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .tab-container {
-            display: flex;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        
-        .tab-button {
-            flex: 1;
-            padding: 15px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            color: #666;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
-        }
-        
-        .tab-button.active {
-            color: #007AFF;
-            border-bottom-color: #007AFF;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 5px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-        
-        .form-group input:focus {
-            outline: none;
-            border-color: #007AFF;
-        }
-        
-        .user-list {
-            max-height: 300px;
-            overflow-y: auto;
-            border: 2px solid #e0e0e0;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-        
-        .user-item {
-            padding: 12px 15px;
-            border-bottom: 1px solid #f0f0f0;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .user-item:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .user-item:last-child {
-            border-bottom: none;
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 15px;
-            background: #007AFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .btn:hover {
-            background: #0056b3;
-        }
-        
-        .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .error-message {
-            color: #ff3b30;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-        
-        .success-message {
-            color: #28a745;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=393, initial-scale=1.0" />
+  <title>MealPrep - Login</title>
+  <link rel="stylesheet" href="/login.css" />
 </head>
 <body>
-    <div class="login-container">
-        <h1 style="text-align: center; margin-bottom: 30px; color: #333;">Food Planner</h1>
-        
-        <div class="tab-container">
-            <button class="tab-button active" onclick="showForm('new')">New User</button>
-            <button class="tab-button" onclick="showForm('existing')">Existing User</button>
-        </div>
-        
-        <div id="new-user-form" class="tab-content active">
-            <h2>Create New Account</h2>
-            <form id="create-form" onsubmit="createUser(event)">
-                <div class="form-group">
-                    <label for="new-username">Username:</label>
-                    <input type="text" id="new-username" name="username" required 
-                           placeholder="Enter your username" maxlength="50">
-                </div>
-                <button type="submit" class="btn">Create Account</button>
-            </form>
-            <div id="create-message"></div>
-        </div>
-        
-        <div id="existing-user-form" class="tab-content">
-            <h2>Select Your Account</h2>
-            <div id="user-list-container">
-                <div class="user-list" id="user-list">
-                    <div style="text-align: center; padding: 20px; color: #666;">
-                        Loading users...
-                    </div>
-                </div>
-            </div>
-            <div id="login-message"></div>
-        </div>
+  <div class="status-bar">
+    <span>9:41</span>
+  </div>
+
+  <div class="page-header">Food Planner</div>
+
+  <div class="content">
+
+    <div class="tab-container">
+      <button class="tab-button active" onclick="showForm('new')">New User</button>
+      <button class="tab-button" onclick="showForm('existing')">Existing User</button>
     </div>
 
-    <script>
-        function showForm(formType) {
-            // Update tab buttons
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            if (formType === 'new') {
-                document.querySelector('.tab-button:first-child').classList.add('active');
-                document.getElementById('new-user-form').classList.add('active');
-            } else {
-                document.querySelector('.tab-button:last-child').classList.add('active');
-                document.getElementById('existing-user-form').classList.add('active');
-                loadUsers();
-            }
-        }
-        
-        function createUser(event) {
-            event.preventDefault();
-            
-            const username = document.getElementById('new-username').value.trim();
-            const messageDiv = document.getElementById('create-message');
-            
-            if (!username) {
-                messageDiv.innerHTML = '<div class="error-message">Please enter a username</div>';
-                return;
-            }
-            
-            // Disable form
-            const submitBtn = event.target.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Creating...';
-            
-            // Send request
-            fetch('/create_user', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'username=' + encodeURIComponent(username)
-            })
-            .then(response => {
-                if (response.redirected) {
-                    window.location.href = response.url;
-                } else {
-                    return response.text();
-                }
-            })
-            .then(data => {
-                if (data) {
-                    messageDiv.innerHTML = '<div class="error-message">' + data + '</div>';
-                }
-            })
-            .catch(error => {
-                messageDiv.innerHTML = '<div class="error-message">Error creating account. Please try again.</div>';
-            })
-            .finally(() => {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Create Account';
-            });
-        }
-        
-        function loadUsers() {
-            const userList = document.getElementById('user-list');
-            userList.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Loading users...</div>';
-            
-            fetch('/get_users')
-            .then(response => response.json())
-            .then(data => {
-                if (data.users && data.users.length > 0) {
-                    userList.innerHTML = '';
-                    data.users.forEach(user => {
-                        const userDiv = document.createElement('div');
-                        userDiv.className = 'user-item';
-                        userDiv.textContent = user;
-                        userDiv.onclick = () => loginUser(user);
-                        userList.appendChild(userDiv);
-                    });
-                } else {
-                    userList.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">No users found. Create a new account first.</div>';
-                }
-            })
-            .catch(error => {
-                userList.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff3b30;">Error loading users. Please refresh the page.</div>';
-            });
-        }
-        
-        function loginUser(username) {
-            const messageDiv = document.getElementById('login-message');
-            
-            // Disable all user items temporarily
-            document.querySelectorAll('.user-item').forEach(item => {
-                item.style.pointerEvents = 'none';
-                item.style.opacity = '0.6';
-            });
-            
-            fetch('/login_user', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'username=' + encodeURIComponent(username)
-            })
-            .then(response => {
-                if (response.redirected) {
-                    window.location.href = response.url;
-                } else {
-                    return response.text();
-                }
-            })
-            .then(data => {
-                if (data) {
-                    messageDiv.innerHTML = '<div class="error-message">' + data + '</div>';
-                    // Re-enable user items
-                    document.querySelectorAll('.user-item').forEach(item => {
-                        item.style.pointerEvents = 'auto';
-                        item.style.opacity = '1';
-                    });
-                }
-            })
-            .catch(error => {
-                messageDiv.innerHTML = '<div class="error-message">Error logging in. Please try again.</div>';
-                // Re-enable user items
-                document.querySelectorAll('.user-item').forEach(item => {
-                    item.style.pointerEvents = 'auto';
-                    item.style.opacity = '1';
-                });
-            });
-        }
-        
-        // Load users when the existing user tab is shown for the first time
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initially show new user form, so no need to load users yet
-        });
-    </script>
+    <div id="new-user-form" class="tab-content active">
+      <form action="/create_user" method="POST">
+        <div class="form-group">
+          <label for="new-username">Username</label>
+          <input type="text" id="new-username" name="username" placeholder="Enter your username" maxlength="50" required />
+        </div>
+        <button type="submit" class="btn-add-item">Create Account</button>
+      </form>
+    </div>
+
+    <div id="existing-user-form" class="tab-content">
+      {% for user in users %}
+      <form action="/login_user" method="POST">
+        <input type="hidden" name="username" value="{{ user }}" />
+        <button type="submit" class="btn-user">{{ user }}</button>
+      </form>
+      {% else %}
+      <div class="empty-state">No users found. Create a new account first.</div>
+      {% endfor %}
+    </div>
+
+  </div>
+
+  <script>
+    function showForm(formType) {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      if (formType === 'new') {
+        document.querySelector('.tab-button:first-child').classList.add('active');
+        document.getElementById('new-user-form').classList.add('active');
+      } else {
+        document.querySelector('.tab-button:last-child').classList.add('active');
+        document.getElementById('existing-user-form').classList.add('active');
+      }
+    }
+  </script>
 </body>
 </html>
