@@ -6,6 +6,8 @@ body {
     width: 393px;
     min-height: 852px;
     font-size: 14px;
+    /* center the 393px-wide layout on the page */
+    margin: 0 auto;
 }
 
 .status-bar {
@@ -32,12 +34,14 @@ body {
 .bottom-nav {
     position: fixed;
     bottom: 0;
+    /* center the 393px nav bar */
+    left: 50%;
+    transform: translateX(-50%);
     width: 393px;
     display: flex;
     border-top: 1px solid #000;
     background: #fff;
     height: 60px;
-    margin: auto;
 }
 
 .nav-tab {
