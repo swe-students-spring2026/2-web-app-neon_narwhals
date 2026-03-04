@@ -5,12 +5,13 @@ from typing import Any
 
 import pymongo
 from dotenv import load_dotenv
-from grocery import current_week
+# from grocery import current_list
 
 load_dotenv()
 
 cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
 food_db = cxn[os.getenv("MONGO_DBNAME")]
+current_list = food_db["current_list"]
 
 
 DAYS: list[str] = [
@@ -87,7 +88,9 @@ def search_food_data(food_name):
 def lookup_food_category(food_name):
     """function for finding the category of the food"""
     doc = food_db.foodstats.find_one({"name": {"$regex": food_name, "$options": "i"}})
+    # doc = food_db.foodstats.find({"Name": {"$regex": food_name}})
     if doc:
+        print(doc["Category"])
         return doc["Category"]
     else:
         return None
@@ -96,6 +99,7 @@ def lookup_food_category(food_name):
 def find_calories_per_serving(food_name):
     """find the number of calories per serving"""
     doc = food_db.foodstats.find_one({"Name": {"$regex": food_name, "$options": "i"}})
+
     if doc:
         return doc["Calories"] / 100
     else:
@@ -109,6 +113,7 @@ def parse_grams(amount: Any) -> float:
 
 def get_usda_record(food_name: str) -> dict[str, Any] | None:
     return food_db.foodstats.find_one({"Name": {"$regex": food_name, "$options": "i"}})
+
 
 
 def get_calories_per_gram(food_name: str) -> float:
@@ -203,7 +208,7 @@ def fill_meal_slot(
 
 
 def build_meal_plan(user_id: str) -> dict[str, Any]:
-    grocery_items = list(current_week.find({"username": user_id}))
+    grocery_items = list(current_list.find({"username": user_id}))
     if not grocery_items:
         return {}
 
