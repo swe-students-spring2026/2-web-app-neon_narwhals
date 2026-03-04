@@ -736,7 +736,8 @@ app = create_app()
 @app.route("/login")
 def login():
     """Login page for user selection"""
-    return render_template("login.html")
+    users = [u["username"] for u in app.db.users.find({}, {"username": 1, "_id": 0})]
+    return render_template("login.html", users=users)
 @app.route("/create_user", methods=["POST"])
 def create_user():
     """Create a new user account"""
