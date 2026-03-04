@@ -23,13 +23,22 @@
         <span class="cat-display">Breakfast</span></div>
       {% for item in items %}
       <div class="item-row">
-        <button type="button" class="btn-delete">Delete</button>
+        <form method="POST" action="{{ url_for('grocery.delete_item', item_id=item._id) }}" style="display: inline;">
+          <button type="submit" class="btn-delete" onclick="return confirm('Delete this item?')">Delete</button>
+        </form>
         <span class="item-name">{{ item.name }}</span>
         <span class="item-amount">{{ item.amount }}</span>
-        <input type="checkbox" name="breakfast" id="{{ item.breakfast }}" {% if item.breakfast %}checked{% endif %}>
+        <form method="POST" action="{{ url_for('grocery.toggle_breakfast', item_id=item._id) }}" style="display: inline;">
+          <label>
+            <input type="checkbox" name="breakfast" 
+                   onchange="this.form.submit()"
+                   {% if item.breakfast %}checked{% endif %}>
+            Breakfast
+          </label>
+        </form>
       </div>
       {% endfor %}
-    </div>
+    </div>  
     {% endfor %}
 
     <div class="section-label add-section">Add New Item</div>
