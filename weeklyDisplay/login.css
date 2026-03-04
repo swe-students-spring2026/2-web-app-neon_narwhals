@@ -1,0 +1,117 @@
+/* Base layout and global reset for grocery screens (list + history) */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: #ffffff;
+    color: #000000;
+    width: 393px;
+    min-height: 852px;
+    font-size: 14px;
+    display: flex-start;
+    margin: 0 auto;
+}
+
+/* iOS-style fake status bar at the top of the screen */
+.status-bar {
+    height: 50px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    font-size: 12px;
+    justify-content: space-between;
+}
+/* Page title area under the status bar */
+.page-header {
+    text-align: center;
+    padding: 12px 0 16px 0;
+    font-size: 18px;
+    font-weight: 600;
+    border-bottom: 1px solid #000;
+}
+
+/* Grocery list content layout ( header text, category sections, and add-item form )*/
+.content { padding: 0 20px 80px 20px; }
+.category-title  { 
+    text-transform: none;
+    display: flex;
+    align-items: center;
+}
+
+
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; margin-bottom: 4px; }
+.form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #000;
+    font-size: 14px;
+    font-family: inherit;
+}
+.btn-add-item {
+    display: block;
+    width: 100%;
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 12px;
+    font-size: 14px;
+    text-align: center;
+    cursor: pointer;
+    font-family: inherit;
+    margin-top: 16px;
+}
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 393px;
+    display: flex;
+    border-top: 1px solid #000;
+    background: #fff;
+    height: 60px;
+    margin: auto;
+}
+
+
+.tab-container {
+    display: flex;
+    border-bottom: 1px solid #000;
+    margin-bottom: 16px;
+}
+.tab-button {
+    flex: 1;
+    padding: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: inherit;
+    color: #888;
+    border-bottom: 2px solid transparent;
+}
+
+.btn-user {
+    display: block;
+    width: 100%;
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 12px;
+    font-size: 14px;
+    text-align: center;
+    cursor: pointer;
+    font-family: inherit;
+    margin-top: 16px;
+}
+.tab-button.active {
+    color: #000;
+    border-bottom: 2px solid #000;
+}
+.tab-content {
+    display: none;
+}
+.tab-content.active {
+    display: block;
+}
