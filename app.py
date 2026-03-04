@@ -984,6 +984,24 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
+@app.route("/existing_user")
+def existing_user():
+    """Login page existing users"""
+    return render_template("existing-user.html")
+@app.route("/existing_user", methods=["POST"])
+def existingr():
+    """Login with existing user"""
+    username = request.form.get("username", "").strip()
+    password = request.form.get("password", "").strip()
+    if not username:
+        return redirect(url_for("login"))
+    # Verify user exists
+    user = app.db.users.find_one({"username": username})
+    if user and user["password"]==password:
+        session['username'] = username
+        return redirect(url_for("home"))
+    else:
+        return render_template("existing_user.html", error="Wrong username or password")
 if __name__ == "__main__":
     FLASK_PORT = int(os.getenv("FLASK_PORT", "3000"))
     FLASK_ENV = os.getenv("FLASK_ENV")
