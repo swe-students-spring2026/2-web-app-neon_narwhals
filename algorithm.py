@@ -5,13 +5,11 @@ from typing import Any
 
 import pymongo
 from dotenv import load_dotenv
-# from grocery import current_list
 
 load_dotenv()
 
 cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
 food_db = cxn[os.getenv("MONGO_DBNAME")]
-current_list = food_db["current_list"]
 
 
 DAYS: list[str] = [
@@ -88,9 +86,7 @@ def search_food_data(food_name):
 def lookup_food_category(food_name):
     """function for finding the category of the food"""
     doc = food_db.foodstats.find_one({"name": {"$regex": food_name, "$options": "i"}})
-    # doc = food_db.foodstats.find({"Name": {"$regex": food_name}})
     if doc:
-        print(doc["Category"])
         return doc["Category"]
     else:
         return None
@@ -99,7 +95,6 @@ def lookup_food_category(food_name):
 def find_calories_per_serving(food_name):
     """find the number of calories per serving"""
     doc = food_db.foodstats.find_one({"Name": {"$regex": food_name, "$options": "i"}})
-
     if doc:
         return doc["Calories"] / 100
     else:
@@ -113,7 +108,6 @@ def parse_grams(amount: Any) -> float:
 
 def get_usda_record(food_name: str) -> dict[str, Any] | None:
     return food_db.foodstats.find_one({"Name": {"$regex": food_name, "$options": "i"}})
-
 
 
 def get_calories_per_gram(food_name: str) -> float:
@@ -135,7 +129,7 @@ def build_food_pool(grocery_items: list[dict[str, Any]]) -> list[dict[str, Any]]
     for item in grocery_items:
         name = item["name"]
         cal_per_gram = get_calories_per_gram(name)
-        total_grams = parse_grams(item["amount"])
+        total_grams = float(item.get("food_amount", 0))
         pool.append(
             {
                 "foodName": name,
@@ -154,7 +148,7 @@ def fill_meal_slot(
     meal_name: str,
     calorie_goal: float,
     used_protein_today: set[str],
-) -> tuple[list[dict[str, Any]], float]:
+) -> tuple[list[dict[str, Any]], float, list[str]]:
     is_breakfast = meal_name == "Breakfast"
     composition = MEAL_COMPOSITION[meal_name]
     splits = MEAL_CALORIE_SPLITS[meal_name]
@@ -165,12 +159,17 @@ def fill_meal_slot(
 
     selected: list[dict[str, Any]] = []
     total_used = 0.0
+    missing_categories: list[str] = []
 
     for category, quota in composition.items():
         budget = cat_budget[category]
         items_used = 0
 
         candidates = [f for f in pool if f["foodCategory"] == category and f["isBreakfast"] == is_breakfast and f["remaining_grams"] > 0 and f["cal_per_gram"] > 0]
+
+        if not candidates:
+            missing_categories.append(category)
+            continue
 
         candidates.sort(key=lambda f: f["remaining_calories"], reverse=True)
 
@@ -204,16 +203,17 @@ def fill_meal_slot(
             if category == "Protein Foods":
                 used_protein_today.add(food["foodName"])
 
-    return selected, round(total_used, 1)
+    return selected, round(total_used, 1), missing_categories
 
 
 def build_meal_plan(user_id: str) -> dict[str, Any]:
-    grocery_items = list(current_list.find({"username": user_id}))
+    grocery_items = list(food_db.foods.find({"username": user_id}))
     if not grocery_items:
         return {}
 
     pool = build_food_pool(grocery_items)
     weekly_plan: dict[str, Any] = {}
+    all_missing: set[str] = set()
 
     for day in DAYS:
         daily_plan: dict[str, Any] = {}
@@ -221,7 +221,8 @@ def build_meal_plan(user_id: str) -> dict[str, Any]:
 
         for meal in ("Breakfast", "Lunch", "Dinner"):
             goal = CALORIE_GOALS[meal]
-            items, total_cal = fill_meal_slot(pool, meal, goal, used_protein_today)
+            items, total_cal, missing = fill_meal_slot(pool, meal, goal, used_protein_today)
+            all_missing.update(missing)
             daily_plan[meal] = {
                 "items": items,
                 "total_calories": total_cal,
@@ -230,16 +231,17 @@ def build_meal_plan(user_id: str) -> dict[str, Any]:
 
         weekly_plan[day] = daily_plan
 
-    push_weekly_plan(user_id, weekly_plan)
-    return weekly_plan
+    push_weekly_plan(user_id, weekly_plan, sorted(all_missing))
+    return {"plan": weekly_plan, "missing_categories": sorted(all_missing)}
 
 
-def push_weekly_plan(user_id: str, plan: dict[str, Any]) -> None:
+def push_weekly_plan(user_id: str, plan: dict[str, Any], missing_categories: list[str]) -> None:
     food_db.weeklymeals.update_one(
         {"username": user_id},
         {
             "$set": {
                 "plan": plan,
+                "missing_categories": missing_categories,
                 "updated_at": datetime.now(timezone.utc),
             }
         },
@@ -247,69 +249,24 @@ def push_weekly_plan(user_id: str, plan: dict[str, Any]) -> None:
     )
 
 
-def dry_run(grocery_items: list[dict[str, Any]]) -> dict[str, Any]:
-    STUB_USDA: dict[str, dict[str, Any]] = {
-        "beef": {"cal_per_gram": 2.50, "category": "Protein Foods"},
-        "milk": {"cal_per_gram": 0.61, "category": "Dairy"},
-        "broccoli": {"cal_per_gram": 0.34, "category": "Vegetables"},
-        "fish": {"cal_per_gram": 2.06, "category": "Protein Foods"},
-        "apples": {"cal_per_gram": 0.52, "category": "Fruits"},
-        "rice": {"cal_per_gram": 1.30, "category": "Grains"},
-    }
-
-    pool: list[dict[str, Any]] = []
-    for item in grocery_items:
-        key = item["name"].lower()
-        stub = STUB_USDA.get(key, {"cal_per_gram": 1.0, "category": "Unknown"})
-        cpg = stub["cal_per_gram"]
-        grams = parse_grams(item["amount"])
-        pool.append(
-            {
-                "foodName": item["name"],
-                "foodCategory": stub["category"],
-                "isBreakfast": bool(item.get("breakfast", False)),
-                "remaining_grams": grams,
-                "cal_per_gram": cpg,
-                "remaining_calories": cpg * grams,
-            }
-        )
-
-    weekly_plan: dict[str, Any] = {}
-    for day in DAYS:
-        daily_plan: dict[str, Any] = {}
-        used_protein_today: set[str] = set()
-
-        for meal in ("Breakfast", "Lunch", "Dinner"):
-            goal = CALORIE_GOALS[meal]
-            items, total = fill_meal_slot(pool, meal, goal, used_protein_today)
-            daily_plan[meal] = {
-                "items": items,
-                "total_calories": total,
-                "calorie_goal": goal,
-            }
-
-        weekly_plan[day] = daily_plan
-
-    return weekly_plan
-
-
 if __name__ == "__main__":
-    sample = [
-        {"name": "Beef", "amount": "500", "breakfast": False},
-        {"name": "Milk", "amount": "1000", "breakfast": True},
-        {"name": "Broccoli", "amount": "500", "breakfast": False},
-        {"name": "Fish", "amount": "500", "breakfast": False},
-        {"name": "Apples", "amount": "200", "breakfast": True},
-        {"name": "Rice", "amount": "700", "breakfast": False},
-    ]
-
-    print("=== Dry-run with sample grocery list ===\n")
-    plan = dry_run(sample)
-
-    for day, meals in plan.items():
-        print(f"── {day} ──")
-        for meal_name, data in meals.items():
-            print(f"  {meal_name}  (goal: {data['calorie_goal']} kcal | used: {data['total_calories']} kcal)")
-            for it in data["items"]:
-                print(f"    • {it['foodName']:12s}  {it['grams']:6d} g  = {it['calories']:6.1f} kcal  [{it['foodCategory']}]")
+    usernames = food_db.foods.distinct("username")
+    if not usernames:
+        print("No users found in foods collection.")
+    for username in usernames:
+        print(f"=== Generating meal plan for: {username} ===")
+        result = build_meal_plan(username)
+        if not result:
+            print(f"  No food items found for {username}\n")
+            continue
+        if result["missing_categories"]:
+            print(f"  WARNING - Missing categories: {result['missing_categories']}")
+        plan = result["plan"]
+        for day, meals in plan.items():
+            print(f"\n  -- {day} --")
+            for meal_name, data in meals.items():
+                print(f"    {meal_name}: {data['total_calories']} / {data['calorie_goal']} kcal")
+                for it in data["items"]:
+                    print(f"      • {it['foodName']:20s} {it['grams']:5d}g  {it['calories']:6.1f} kcal  [{it['foodCategory']}]")
         print()
+    print("weeklymeals updated for:", food_db.weeklymeals.distinct("username"))
