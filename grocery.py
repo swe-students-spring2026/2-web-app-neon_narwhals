@@ -151,6 +151,10 @@ def save_week():
 
 @grocery_bp.route("/grocery-list", methods=["GET", "POST"])
 def grocery_list():
+    username = session.get('username')
+    if not username:
+        return redirect(url_for("login"))
+    
     unlabeled_items = current_week.count_documents({
     "$or": [
         {"food_type": {"$exists": False}},
@@ -171,7 +175,10 @@ def grocery_list():
         name = request.form.get("name")
         amount = request.form.get("amount")
         is_breakfast = request.form.get("breakfast") == "on"
-        username = session.get('username', 'default_user')
+        # username = session.get('username') #NEED TO DEBUG
+        # if not username:
+        #     print("no user")
+        #     return redirect(url_for("auth.login"))
         food_category = get_item_category(name)
         total_calories = calculate_item_calories(name,amount)    
         print(f"POST - Name: {name}, Amount: {amount}, Breakfast: {is_breakfast} cal: {total_calories}")    
@@ -194,7 +201,7 @@ def grocery_list():
    
    # GET request
 
-    items = list(current_week.find())
+    items = current_week.find({"username": username})
     categories_dict = {}
 
     for item in items:
@@ -206,7 +213,7 @@ def grocery_list():
         categories_dict[category].append(item)
 
  
-    return render_template("grocery-list.html", categories=categories_dict, total_items = len(items))
+    return render_template("grocery-list.html", categories=categories_dict)
 
 
 @grocery_bp.route('/<path:filename>')
