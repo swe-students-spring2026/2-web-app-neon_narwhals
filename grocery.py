@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 from pymongo import MongoClient
 import os
 import datetime
+from bson.objectid import ObjectId
 import certifi
 from algorithm import (
     build_meal_plan,
@@ -85,6 +86,72 @@ def label_existing_items():
     print(f"Total items updated: {updated_count}")
     return updated_count
 
+@grocery_bp.route("/delete-item/<item_id>", methods=["POST"])
+def delete_item(item_id):
+    try:
+        result = current_week.delete_one({"_id": ObjectId(item_id)})
+        if result.deleted_count > 0:
+            print(f"Deleted item with id: {item_id}")
+        else:
+            print(f"Item not found: {item_id}")
+    except Exception as e:
+        print(f"Error deleting item: {e}")
+    return redirect(url_for("grocery.grocery_list"))
+
+# @grocery_bp.route("/edit-item/<item_id>", methods=["GET","POST"])
+# def edit_item(item_id):
+#    if request.method == "POST":
+#         name = request.form.get("name")
+#         amount = request.form.get("amount")
+#         is_breakfast = request.form.get("breakfast") == "on"
+        
+#         if name and amount:
+#             food_category = get_item_category(name)
+#             total_calories = calculate_item_calories(name, amount)
+            
+#             current_week.update_one(
+#                 {"_id": ObjectId(item_id)},
+#                 {"$set": {
+#                     "name": name,
+#                     "food_type": food_category,
+#                     "amount": amount,
+#                     "calories": total_calories,
+#                     "breakfast": is_breakfast,
+#                     "date_modified": datetime.datetime.utcnow()
+#                 }}
+#             )
+#             print(f"Updated item {name}")
+#         return redirect(url_for("grocery.grocery_list"))
+#     # GET request - show edit form
+#     item = current_week.find_one({"_id": ObjectId(item_id)})
+#     if item:
+#         item['_id'] = str(item['_id'])
+#     return render_template("edit-item.html", item=item)
+
+# @grocery_bp.route("/toggle-breakfast/<item_id>", methods=["POST"])
+
+
+@grocery_bp.route("/toggle-breakfast/<item_id>", methods=["POST"])
+def toggle_breakfast(item_id):
+    try:
+        item = current_week.find_one({"_id": ObjectId(item_id)})
+        if item:
+            current_value = item.get("breakfast", False)
+            current_week.update_one(
+                {"_id": ObjectId(item_id)},
+                {"$set": {"breakfast": not current_value}}
+            )
+            print(f"Toggled breakfast for {item.get('name')} to {not current_value}")
+            
+            # If it's an AJAX request
+            if request.headers.get('Content-Type') == 'application/json':
+                return jsonify({"success": True, "breakfast": not current_value})
+        
+        return redirect(url_for("grocery.grocery_list"))
+    except Exception as e:
+        print(f"Error toggling breakfast: {e}")
+        return redirect(url_for("grocery.grocery_list"))
+
 @grocery_bp.route("/label-items")
 def label_items_route():
     count = label_existing_items()
@@ -133,19 +200,22 @@ def grocery_list():
     if request.method == "POST":
         name = request.form.get("name")
         amount = request.form.get("amount")
+        is_breakfast = request.form.get("breakfast") == "on"
         # time_in_day = request.form.get("breakfast") #TODO: request form for breakfast
-        # username = session.get('username', 'default_user')
-        print(f"Received POST request with name: {name}, amount: {amount}")
-        if name and amount: #try reusing james algo.py
+        username = session.get('username', 'default_user')
+        print(f"POST - Name: {name}, Amount: {amount}, Breakfast: {is_breakfast}")        
+        
+        if name and amount: 
             food_category = get_item_category(name)
             total_calories = calculate_item_calories(name,amount)
 
             result  = current_week.insert_one({
-                "username": "userTest",
+                "username": username,
                 "name": name,
                 "food_type": food_category,
                 "amount": amount,
                 "calories": total_calories,
+                "breakfast": is_breakfast,
                 # "time_in_day": time_in_day, #function get breakfast
                 "date_added": datetime.datetime.utcnow()
             })
@@ -159,6 +229,7 @@ def grocery_list():
     for item in items:
         item['_id'] = str(item['_id'])
         category = item.get("food_type", "other")
+
         if category not in categories_dict:
             categories_dict[category] = []
         categories_dict[category].append(item)
