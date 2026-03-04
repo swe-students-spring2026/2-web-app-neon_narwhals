@@ -1,38 +1,4 @@
 
-/* Day nav */
-.day-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 20px;
-    border-bottom: 1px solid #000;
-}
-
-.day-nav-btn {
-    background: #000;
-    color: #fff;
-    border: none;
-    padding: 6px 14px;
-    font-size: 13px;
-    cursor: pointer;
-    font-family: inherit;
-    text-decoration: none;
-    display: inline-block;
-}
-
-.day-nav-center {
-    text-align: center;
-}
-
-.day-nav-label {
-    font-size: 15px;
-    font-weight: 700;
-}
-
-.day-nav-sub {
-    font-size: 11px;
-}
-
 /* Meal section */
 .meal-section {
     border-bottom: 1px solid #000;
@@ -130,34 +96,6 @@
     font-size: 13px;
     color: #888;
     font-style: italic;
-}
-
-/* Summary row */
-.summary-row {
-    display: flex;
-    border-bottom: 1px solid #000;
-    border-top: none;
-}
-
-.summary-cell {
-    flex: 1;
-    text-align: center;
-    padding: 10px 4px;
-    border-right: 1px solid #ccc;
-    font-size: 11px;
-}
-
-.summary-cell:last-child { border-right: none; }
-
-.summary-cell .s-label {
-    font-size: 10px;
-    color: #555;
-    text-transform: uppercase;
-}
-
-.summary-cell .s-val {
-    font-size: 13px;
-    font-weight: 700;
 }
 
 /* Bottom actions */
