@@ -14,6 +14,8 @@ from bson.objectid import ObjectId
 from dotenv import load_dotenv, dotenv_values
 from jinja2 import ChoiceLoader, FileSystemLoader
 from grocery import grocery_bp
+import certifi
+from pymongo import MongoClient
 
 
 
@@ -62,13 +64,20 @@ def create_app():
     app.secret_key = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 
     cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
+    cxn = pymongo.MongoClient(
+    os.getenv("MONGO_URI"),
+    tlsCAFile=certifi.where()  # This fixes the SSL certificate error
+)
     db = cxn[os.getenv("MONGO_DBNAME")]
-    # Attach db to app for use in routes defined outside create_app
+   # Attach db to app for use in routes defined outside create_app
     app.db = db
 
     try:
         cxn.admin.command("ping")
         print(" *", "Connected to MongoDB!")
+        if cxn is not None:
+            cxn.admin.command("ping")
+            print(" *", "Connected to MongoDB!")
         # Create a sample Food object and insert it into the database
         sample_food = Food(
             name="beef",
