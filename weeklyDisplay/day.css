@@ -1,131 +1,164 @@
 
-/* Meal section */
-.meal-section {
-    border-bottom: 1px solid #000;
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+.status-bar {
+  height: 50px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  font-size: 12px;
+  justify-content: space-between;
 }
 
-.meal-section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background: #f5f5f5;
-    border-bottom: 1px solid #ccc;
+.page-header {
+  text-align: center;
+  padding: 12px 0 16px 0;
+  font-size: 22px;
+  font-weight: 600;
+  border-bottom: 1px solid #000;
 }
 
-.meal-section-title {
-    font-size: 14px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.day-summary {
+  text-align: center;
+  padding: 10px 0;
+  font-size: 22px;
+  font-weight: bold;
+  background: #000;
+  color: #fff;
+  margin: 0 20px;
+  border-radius: 8px;
+}
+
+.content { padding: 0; }
+
+/* Day block */
+.day-block {
+  border-bottom: 1px solid #000;
+}
+
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  border-bottom: 1px solid #ccc;
+  background: #f5f5f5;
+}
+
+.day-header.today {
+  background: #000;
+  color: #fff;
+}
+
+.day-name {
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.day-header-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .btn-small {
-    background: none;
-    border: 1px solid #000;
-    padding: 3px 8px;
-    font-size: 11px;
-    cursor: pointer;
-    font-family: inherit;
+  background: none;
+  border: 1px solid currentColor;
+  padding: 3px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  text-decoration: none;
+  display: inline-block;
 }
 
-/* Food item rows */
-.food-item-row {
-    display: flex;
-    align-items: center;
-    padding: 8px 20px;
-    border-bottom: 1px solid #eee;
-    font-size: 13px;
+/* Meal row inside a day */
+.meal-row {
+  display: flex;
+  padding: 7px 20px;
+  border-bottom: 1px solid #eee;
+  font-size: 16px;
 }
 
-.food-item-row:last-child { border-bottom: none; }
+.meal-row:last-child { border-bottom: none; }
 
-.food-name { flex: 1; }
-
-.food-amount {
-    width: 70px;
-    text-align: right;
-    color: #333;
+.meal-header {
+  display: flex;
+  flex-direction: column;
+  width: 80px;
+  flex-shrink: 0;
 }
 
-.food-actions {
-    display: flex;
-    gap: 6px;
-    margin-left: 10px;
+.meal-type {
+  font-weight: 600;
+  font-size: 15px;
 }
 
-.btn-tiny {
-    background: #000;
-    color: #fff;
-    border: none;
-    padding: 3px 8px;
-    font-size: 10px;
-    cursor: pointer;
-    font-family: inherit;
+.meal-items {
+  flex: 1;
+  color: #333;
 }
 
-.btn-tiny-outline {
-    background: #fff;
-    color: #000;
-    border: 1px solid #000;
-    padding: 3px 8px;
-    font-size: 10px;
-    cursor: pointer;
-    font-family: inherit;
-    text-decoration: none;
-    display: inline-block;
+.meal-calories {
+  font-weight: bold;
+  font-size: 17px;
+  color: #000;
+  margin-bottom: 4px;
+  padding: 6px 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  text-align: center;
 }
 
-.add-item-row {
-    padding: 8px 20px;
-    font-size: 12px;
+.food-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
 }
 
-.add-item-btn {
-    background: none;
-    border: none;
-    font-size: 12px;
-    cursor: pointer;
-    font-family: inherit;
-    text-decoration: underline;
-    color: #000;
+.food-item:not(:last-child) {
+  border-bottom: 1px solid #eee;
 }
 
-.empty-meal-msg {
-    padding: 8px 20px;
-    font-size: 13px;
-    color: #888;
-    font-style: italic;
+.meal-items.empty {
+  color: #888;
+  font-style: italic;
 }
 
-/* Bottom actions */
-.bottom-actions {
-    padding: 16px 20px;
+/* Bottom action row */
+.delete-week-row {
+  padding: 16px 20px;
+  border-bottom: 1px solid #000;
 }
 
 .btn-black-full {
-    display: block;
-    width: 100%;
-    background: #000;
-    color: #fff;
-    border: none;
-    padding: 12px;
-    font-size: 14px;
-    text-align: center;
-    cursor: pointer;
-    font-family: inherit;
-    margin-bottom: 8px;
+  display: block;
+  width: 100%;
+  background: #000;
+  color: #fff;
+  border: none;
+  padding: 12px;
+  font-size: 16px;
+  text-align: center;
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 8px;
+  text-decoration: none;
 }
 
 .btn-outline-full {
-    display: block;
-    width: 100%;
-    background: #fff;
-    color: #000;
-    border: 1px solid #000;
-    padding: 12px;
-    font-size: 14px;
-    text-align: center;
-    cursor: pointer;
-    font-family: inherit;
+  display: block;
+  width: 100%;
+  background: #fff;
+  color: #000;
+  border: 1px solid #000;
+  padding: 12px;
+  font-size: 16px;
+  text-align: center;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
 }
