@@ -249,52 +249,6 @@ def push_weekly_plan(user_id: str, plan: dict[str, Any], missing_categories: lis
     )
 
 
-def dry_run(grocery_items: list[dict[str, Any]]) -> dict[str, Any]:
-    STUB_USDA: dict[str, dict[str, Any]] = {
-        "beef": {"cal_per_gram": 2.50, "category": "Protein Foods"},
-        "milk": {"cal_per_gram": 0.61, "category": "Dairy"},
-        "broccoli": {"cal_per_gram": 0.34, "category": "Vegetables"},
-        "fish": {"cal_per_gram": 2.06, "category": "Protein Foods"},
-        "apples": {"cal_per_gram": 0.52, "category": "Fruits"},
-        "rice": {"cal_per_gram": 1.30, "category": "Grains"},
-    }
-
-    pool: list[dict[str, Any]] = []
-    for item in grocery_items:
-        key = item["name"].lower()
-        stub = STUB_USDA.get(key, {"cal_per_gram": 1.0, "category": "Unknown"})
-        cpg = stub["cal_per_gram"]
-        grams = parse_grams(item["amount"])
-        pool.append(
-            {
-                "foodName": item["name"],
-                "foodCategory": stub["category"],
-                "isBreakfast": bool(item.get("breakfast", False)),
-                "remaining_grams": grams,
-                "cal_per_gram": cpg,
-                "remaining_calories": cpg * grams,
-            }
-        )
-
-    weekly_plan: dict[str, Any] = {}
-    for day in DAYS:
-        daily_plan: dict[str, Any] = {}
-        used_protein_today: set[str] = set()
-
-        for meal in ("Breakfast", "Lunch", "Dinner"):
-            goal = CALORIE_GOALS[meal]
-            items, total, _ = fill_meal_slot(pool, meal, goal, used_protein_today)
-            daily_plan[meal] = {
-                "items": items,
-                "total_calories": total,
-                "calorie_goal": goal,
-            }
-
-        weekly_plan[day] = daily_plan
-
-    return weekly_plan
-
-
 if __name__ == "__main__":
     usernames = food_db.foods.distinct("username")
     if not usernames:
