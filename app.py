@@ -942,12 +942,12 @@ app = create_app()
 @app.route("/login")
 def login():
     """Login page for user selection"""
-    users = [u["username"] for u in app.db.users.find({}, {"username": 1, "_id": 0})]
-    return render_template("login.html", users=users)
+    return render_template("login.html")
 @app.route("/create_user", methods=["POST"])
 def create_user():
     """Create a new user account"""
     username = request.form.get("username", "").strip()
+    password = request.form.get("password", "").strip()
     if not username:
         return redirect(url_for("login"))
     # Check if username already exists
@@ -959,6 +959,7 @@ def create_user():
     # Create new user
     app.db.users.insert_one({
         "username": username,
+        "passowrd": password,
         "created_at": datetime.datetime.utcnow()
     })
     session['username'] = username
@@ -968,22 +969,15 @@ def create_user():
 def login_user():
     """Login with existing user"""
     username = request.form.get("username", "").strip()
+    password = request.form.get("password", "").strip()
     if not username:
         return redirect(url_for("login"))
     # Verify user exists
     user = app.db.users.find_one({"username": username})
-    if user:
+    if user and user["password"]==password:
         session['username'] = username
         return redirect(url_for("home"))
     return redirect(url_for("login"))
-
-@app.route("/get_users")
-def get_users():
-    """Get list of all usernames for the login page"""
-    users = list(app.db.users.find({}, {"username": 1, "_id": 0}))
-    usernames = [user["username"] for user in users]
-    return jsonify({"users": usernames})
-
 @app.route("/logout")
 def logout():
     """Logout current user"""

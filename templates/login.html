@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=393, initial-scale=1.0" />
   <title>MealPrep - Login</title>
-  <link rel="stylesheet" href="/login.css" />
+  <link rel="stylesheet" href="/static/login.css" />
 </head>
 <body>
   <div class="status-bar">
@@ -26,19 +26,26 @@
           <label for="new-username">Username</label>
           <input type="text" id="new-username" name="username" placeholder="Enter your username" maxlength="50" required />
         </div>
+        <div class="form-group">
+          <label for="new-password">Password</label>
+          <input type="password" id="new-password" name="password" placeholder="Enter your password" maxlength="50" required />
+        </div>
         <button type="submit" class="btn-add-item">Create Account</button>
       </form>
     </div>
 
     <div id="existing-user-form" class="tab-content">
-      {% for user in users %}
       <form action="/login_user" method="POST">
-        <input type="hidden" name="username" value="{{ user }}" />
-        <button type="submit" class="btn-user">{{ user }}</button>
+        <div class="form-group">
+          <label for="old-username">Username</label>
+          <input type="text" id="old-username" name="username" placeholder="Enter your username" maxlength="50" required />
+        </div>
+        <div class="form-group">
+          <label for="old-password">Password</label>
+          <input type="password" id="old-password" name="password" placeholder="Enter your password" maxlength="50" required />
+        </div>
+        <button type="submit" class="btn-add-item">Login</button>
       </form>
-      {% else %}
-      <div class="empty-state">No users found. Create a new account first.</div>
-      {% endfor %}
     </div>
 
   </div>
