@@ -32,62 +32,13 @@ body {
 
 /* Grocery list content layout ( header text, category sections, and add-item form )*/
 .content { padding: 0 20px 80px 20px; }
-.section-label {
-    text-align: center;
-    font-size: 14px;
-    font-weight: 600;
-    margin: 16px 0 10px 0;
-}
-.category-block { margin-bottom: 16px; }
-.category-title {
-    font-size: 13px;
-    font-weight: 700;
-    margin-bottom: 6px;
-    padding-bottom: 4px;
-    border-bottom: 1px solid #ccc;
-}
-
 .category-title  { 
     text-transform: none;
     display: flex;
     align-items: center;
 }
-.category-title .cat-display {
-    justify-content: space-evenly;
-}
-.item-row {
-    display: flex;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid #eee;
-    font-size: 13px;
-}
-.item-row:last-child { border-bottom: none; }
-.item-name { flex: 1; }
-.item-amount {
-     width: 70px; 
-     text-align: left;
-     color: #333; 
-    }
-.btn-checkbox {
-    margin-left: 10px;
 
-}
-.btn-delete {
-    background: #000;
-    color: #fff;
-    border: none;
-    padding: 5px 10px;
-    font-size: 11px;
-    cursor: pointer;
-    font-family: inherit;
-    margin-right: 10px;
-}
-.add-section {
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid #000;
-}
+
 .form-group { margin-bottom: 12px; }
 .form-group label { display: block; font-size: 13px; margin-bottom: 4px; }
 .form-group input {
@@ -110,26 +61,7 @@ body {
     font-family: inherit;
     margin-top: 16px;
 }
-.empty-cat { font-size: 13px; color: #888; font-style: italic; padding: 8px 0; }
 
-/* Grocery history table layout (for previous grocery lists) */
-.week-block {
-    padding: 10px 20px;
-    border-bottom: 1px solid #000;
-}
-.history-container {
-  background: white;
-  margin: auto;
-}
-.table-header{
-    display: grid;
-    grid-template-columns: 2fr 2fr 1fr;
-    margin:  10px 0 10px 0;
-}
-.table-row {
-    display: grid;
-    grid-template-columns: 2fr 2fr 1fr;
-}
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -142,17 +74,6 @@ body {
     margin: auto;
 }
 
-.nav-tab {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    border-right: 1px solid #000;
-    cursor: pointer;
-    text-decoration: none;
-    color: #000;
-}
 
 .tab-container {
     display: flex;
@@ -194,6 +115,3 @@ body {
 .tab-content.active {
     display: block;
 }
-
-.nav-tab:last-child { border-right: none; }
-.nav-tab.active { background: #000; color: #fff; }
