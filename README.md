@@ -137,7 +137,7 @@ FLASK_ENV: None, FLASK_PORT: 3000
 Open browser of choice, you can navigate to the following pages via these links or from nav bar...
 
 - **Week view:** `http://127.0.0.1:3000/week`
-- **Day view (breakfast / lunch / dinner):** `http://127.0.0.1:3000/simple-day.html`
+- **Day view (breakfast / lunch / dinner):** `http://127.0.0.1:3000/day`
 - **Grocery list (current list with categories and add form):** `http://127.0.0.1:3000/grocery-list`
 - **Grocery history:** `http://127.0.0.1:3000/grocery-history`
 
@@ -151,9 +151,9 @@ Once the server is running and pages load without errors, interact with our app!
 
   - Use the Grocery tab to add items, Day and Week views to edit items, and delete either individual meals or whole days.
 - **Swap days in Week view:**
-  - On `simple-week.html` use the **↑ / ↓** arrows in each day header to swap all meals for that day with the day above/below.
+  - On `/week` use the **↑ / ↓** arrows in each day header to swap all meals for that day with the day above/below.
 - **Swap meals within a day:**
-  - On `simple-day.html` use the small **↑ / ↓** arrows in the Breakfast/Lunch/Dinner headers to move a whole meal block up or down (e.g. swap Lunch with Dinner).
+  - On `/day` use the small **↑ / ↓** arrows in the Breakfast/Lunch/Dinner headers to move a whole meal block up or down (e.g. swap Lunch with Dinner).
 - **Grocery list & history:**
   - Visit `/grocery-list` to see the grocery layout and `/grocery-history` to see the history mock‑up. These screens share the same bottom navigation as the Home/Week/Day views.
 
