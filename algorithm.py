@@ -197,7 +197,7 @@ def fill_meal_slot(
             missing_categories.append(category)
             continue
 
-        candidates.sort(key=lambda f: f["remaining_calories"], reverse=True)
+        candidates.sort(key=lambda f: f["remaining_grams"], reverse=True)
 
         for food in candidates:
             if budget <= 0 or items_used >= quota:

@@ -14,12 +14,9 @@ from bson.objectid import ObjectId
 from dotenv import load_dotenv, dotenv_values
 from jinja2 import ChoiceLoader, FileSystemLoader
 from grocery import grocery_bp
+from algorithm import restore_grams_to_current_list
 import certifi
 from pymongo import MongoClient
-
-
-
-load_dotenv()  # load environment variables from .env file
 class Food:
     """
     Food class to represent a food item with nutritional and timing information.
@@ -484,6 +481,28 @@ def create_app():
         username = session.get('username')
         if not username:
             return redirect(url_for("login"))
+        # Get the weekly plan to sum grams for each food in the day
+        weekly_doc = grocery_db["weeklymeals"].find_one({"username": username})
+        food_totals = {}
+        if weekly_doc and "plan" in weekly_doc:
+            plan = weekly_doc["plan"]
+            # Find the day
+            day_key = None
+            for key in plan.keys():
+                if key.lower() == weekday.lower():
+                    day_key = key
+                    break
+            if day_key:
+                day_plan = plan[day_key]
+                for meal_name in ['Breakfast', 'Lunch', 'Dinner']:
+                    meal_data = day_plan.get(meal_name, {})
+                    for item in meal_data.get("items", []):
+                        food_name = item['foodName']
+                        grams = item['grams']
+                        food_totals[food_name] = food_totals.get(food_name, 0) + grams
+        # Restore for each food
+        for food_name, total_grams in food_totals.items():
+            restore_grams_to_current_list(username, food_name, total_grams)
         db.foods.delete_many({"weekday": weekday.lower(), "username": username})
         
         # Also delete from weeklymeals if it exists
@@ -517,9 +536,26 @@ def create_app():
         Returns:
             Redirect to day view
         """
-        username = session.get('username')
-        if not username:
-            return redirect(url_for("login"))
+        # Get the weekly plan to sum grams for each food in the meal
+        weekly_doc = grocery_db["weeklymeals"].find_one({"username": username})
+        food_totals = {}
+        if weekly_doc and "plan" in weekly_doc:
+            plan = weekly_doc["plan"]
+            day_plan = plan.get(weekday.lower(), {})
+            meal_data = day_plan.get(meal.lower(), {})
+            # Sum grams for each food
+            for item in meal_data.get("items", []):
+                food_name = item['foodName']
+                grams = item['grams']
+                food_totals[food_name] = food_totals.get(food_name, 0) + grams
+            # Remove all items from the meal
+            meal_data["items"] = []
+            meal_data["total_calories"] = 0
+            # Update the plan
+            grocery_db["weeklymeals"].update_one({"username": username}, {"$set": {"plan": plan}})
+        # Restore for each food
+        for food_name, total_grams in food_totals.items():
+            restore_grams_to_current_list(username, food_name, total_grams)
         db.foods.delete_many({"weekday": weekday.lower(), "time_in_day": meal.lower(), "username": username})
         return redirect(url_for("day_view", weekday=weekday))
 
@@ -865,6 +901,9 @@ def create_app():
             return redirect(url_for("login"))
         # Get the food item first to know which day to redirect to
         food_doc = db.foods.find_one({"_id": ObjectId(food_id), "username": username})
+        if food_doc:
+            # Restore the amount back to current list
+            restore_grams_to_current_list(username, food_doc["name"], food_doc["food_amount"])
         weekday = food_doc.get('weekday', 'monday') if food_doc else 'monday'
         result = db.foods.delete_one({"_id": ObjectId(food_id), "username": username})
         # Handle JSON API requests
@@ -892,9 +931,24 @@ def create_app():
         Returns:
             Redirect to home page.
         """
-        username = session.get('username')
-        if not username:
-            return redirect(url_for("login"))
+        # Get the total grams from the weekly plan for this food in this meal
+        weekly_doc = grocery_db["weeklymeals"].find_one({"username": username})
+        total_grams = 0
+        if weekly_doc and "plan" in weekly_doc:
+            plan = weekly_doc["plan"]
+            day_plan = plan.get(weekday.lower(), {})
+            meal_data = day_plan.get(time_in_day.lower(), {})
+            # Sum the grams for the deleted food
+            total_grams = sum(item['grams'] for item in meal_data.get("items", []) if item['foodName'].lower() == food_name.lower())
+            # Remove the items from the plan
+            updated_items = [item for item in meal_data.get("items", []) if item['foodName'].lower() != food_name.lower()]
+            meal_data["items"] = updated_items
+            # Recalculate total_calories
+            meal_data["total_calories"] = sum(item['calories'] for item in updated_items)
+            # Update the plan
+            grocery_db["weeklymeals"].update_one({"username": username}, {"$set": {"plan": plan}})
+        # Restore the total grams
+        restore_grams_to_current_list(username, food_name, total_grams)
         result = db.foods.delete_many({"name": food_name, "weekday": weekday, "time_in_day": time_in_day, "username": username})
         return redirect(url_for("home"))
     
