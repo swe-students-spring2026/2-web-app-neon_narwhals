@@ -259,7 +259,6 @@ def build_meal_plan(user_id: str) -> dict[str, Any]:
 
         weekly_plan[day] = daily_plan
 
-    update_current_list_amounts(pool)
     push_weekly_plan(user_id, weekly_plan, sorted(all_missing))
     return {"plan": weekly_plan, "missing_categories": sorted(all_missing)}
 

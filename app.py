@@ -500,9 +500,6 @@ def create_app():
                         food_name = item['foodName']
                         grams = item['grams']
                         food_totals[food_name] = food_totals.get(food_name, 0) + grams
-        # Restore for each food
-        for food_name, total_grams in food_totals.items():
-            restore_grams_to_current_list(username, food_name, total_grams)
         db.foods.delete_many({"weekday": weekday.lower(), "username": username})
         
         # Also delete from weeklymeals if it exists
@@ -553,9 +550,6 @@ def create_app():
             meal_data["total_calories"] = 0
             # Update the plan
             grocery_db["weeklymeals"].update_one({"username": username}, {"$set": {"plan": plan}})
-        # Restore for each food
-        for food_name, total_grams in food_totals.items():
-            restore_grams_to_current_list(username, food_name, total_grams)
         db.foods.delete_many({"weekday": weekday.lower(), "time_in_day": meal.lower(), "username": username})
         return redirect(url_for("day_view", weekday=weekday))
 
@@ -901,9 +895,6 @@ def create_app():
             return redirect(url_for("login"))
         # Get the food item first to know which day to redirect to
         food_doc = db.foods.find_one({"_id": ObjectId(food_id), "username": username})
-        if food_doc:
-            # Restore the amount back to current list
-            restore_grams_to_current_list(username, food_doc["name"], food_doc["food_amount"])
         weekday = food_doc.get('weekday', 'monday') if food_doc else 'monday'
         result = db.foods.delete_one({"_id": ObjectId(food_id), "username": username})
         # Handle JSON API requests
@@ -947,8 +938,6 @@ def create_app():
             meal_data["total_calories"] = sum(item['calories'] for item in updated_items)
             # Update the plan
             grocery_db["weeklymeals"].update_one({"username": username}, {"$set": {"plan": plan}})
-        # Restore the total grams
-        restore_grams_to_current_list(username, food_name, total_grams)
         result = db.foods.delete_many({"name": food_name, "weekday": weekday, "time_in_day": time_in_day, "username": username})
         return redirect(url_for("home"))
     
