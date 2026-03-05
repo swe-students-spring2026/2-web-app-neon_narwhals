@@ -21,7 +21,7 @@
 
     {% for week in history %}
     <div class="week-block">
-        <h3 class="week-title">Week of {{ week.week }}</h3>
+        <h3 class="week-title">Week of {{ week.week_start.strftime('%B %d, %Y') }}</h3>
 
         <div class="table-header">
         <span>Food Item</span>
@@ -32,7 +32,7 @@
         {% for item in week["items"] %}
         <div class="table-row">
         <span>{{ item.name }}</span>
-        <span>{{ item.date_added }}</span>
+        <span>{{ item.date_added.strftime('%m-%d-%Y') }}</span>
         <span>{{ item.amount }}</span>
         </div>
         {% endfor %}
@@ -53,13 +53,14 @@
             <span>10/2/2024</span>
             <span>1 gallon</span>
         </div>
+    </--duplicates-->
     <!-- Bottom Nav -->
     <nav class="bottom-nav">
         <a href="/week" class="nav-tab">Week</a>
         <a href="/day" class="nav-tab">Day</a>
         <a href="/grocery-list" class="nav-tab">Grocery</a>
         <a href="/grocery-history" class="nav-tab active">History</a>
-        <a href="/login" class="nav-tab">Logout</a>
+        <a href="/logout" class="nav-tab">Logout</a>
     </nav>
 </body>
 </html>

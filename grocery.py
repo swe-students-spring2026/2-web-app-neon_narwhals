@@ -5,7 +5,12 @@ import datetime
 from bson.objectid import ObjectId
 import certifi
 from algorithm import (
-    parse_grams,
+    build_meal_plan,
+    push_weekly_plan,
+    get_food_category,
+    lookup_food_category,
+    get_calories_per_gram,
+    parse_grams
 )
 '''
 This module defines the grocery blueprint for the Flask application. It handles routes related to the grocery list, including displaying the current list, adding items, saving weekly history, and viewing past grocery lists.
@@ -21,7 +26,7 @@ db = client["groceryfood"]
 
 
 current_week = db["current_list"]
-grocery_history = db["grocery_list_test"] #need to update to read old week's instead of hardcoded 
+grocery_history = db["grocery_history"] #need to update to read old week's instead of hardcoded 
 
 #== HELPER FUNCTIONS ==#
 def calculate_item_calories(name, amount):
@@ -44,7 +49,52 @@ def get_item_category(name):
         print("not found!")
         return None
 
+def get_week_start(dt):
+    """Get the Monday of the week for a given datetime"""
+    return dt - datetime.timedelta(days=dt.weekday())
+def add_old_to_history(username):
+    """Add Items from current_week into grocery_history"""
+    #get the current week time
+    now = datetime.datetime.utcnow()
+    this_week_start = get_week_start(now).replace(hour=0, minute=0, second=0, microsecond=0)
+    #go through current_list to find old dates
+    old_items = list(current_week.find({
+        "username": username,
+        "date_added": {"$lt": this_week_start},
+        "username": username
+        }))
+    old_weeks = {}
+    if old_items:
+        #go through each old item and find correct week group
+        for item in old_items:
+            item_week_start = get_week_start(item["date_added"]).replace(hour=0, minute=0, second=0, microsecond=0)
+            week_key = item_week_start.strftime("%Y-%m-%d") 
+            if week_key not in old_weeks:
+                old_weeks[week_key]={
+                    "week_start": item_week_start,
+                    "items": []
+                }
+            #make a copy of the item from current_list 
+            item_cp = item.copy()
+            item_cp["_id"] = str(item["_id"])
+            #add this item into its correct week
+            old_weeks[week_key]["items"].append(item_cp)
+    for week_key in old_weeks:
+        exist = grocery_history.find_one({"week_start": old_weeks[week_key]["week_start"]})
+        if exist:
+            grocery_history.update_one(
+                {"week_start": old_weeks[week_key]["week_start"]},
+                {"$push": {"items": {"$each": old_weeks[week_key]["items"]}}}
+            )
+        else:
+            grocery_history.insert_one({
+                "username": username,
+                "week_start": old_weeks[week_key]["week_start"],
+                "items": old_weeks[week_key]["items"]
+            })
 
+    for item in old_items:
+        current_week.delete_one({"_id":item["_id"]})
 #== CRUD ==#
 def label_existing_items():
     items = list(current_week.find({
@@ -121,8 +171,11 @@ def label_items_route():
 #== GROCERY DISPLAY ==#
 @grocery_bp.route("/grocery-history")
 def grocery_history_page():
-    history = list(grocery_history.find().sort("week", -1))  # Sort by week in descending order
-    
+    """Updates the grocery history page"""
+    username = session.get('username')
+    add_old_to_history(username)
+    # Sort by week in descending order
+    history = list(grocery_history.find({"username": username}).sort("week_start", -1))  
     for week in history:
         week['_id'] = str(week['_id'])
         for item in week.get('items', []):
