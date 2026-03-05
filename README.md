@@ -17,4 +17,5 @@ See instructions. Delete this line and place instructions to download, configure
 ## Task boards
 
 [Link for Sprint 1](https://github.com/orgs/swe-students-spring2026/projects/11/views/2)
+
 [Link for Sprint 2](https://github.com/orgs/swe-students-spring2026/projects/60/views/2)
