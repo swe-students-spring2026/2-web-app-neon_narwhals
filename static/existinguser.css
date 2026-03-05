@@ -24,14 +24,15 @@ body {
 /* Page title area under the status bar */
 .page-header {
     text-align: center;
-    padding: 12px 0 16px 0;
+    padding: 12px 0 24px 0;
     font-size: 18px;
     font-weight: 600;
     border-bottom: 1px solid #000;
+    margin-bottom: 20px;
 }
 
 /* Grocery list content layout ( header text, category sections, and add-item form )*/
-.content { padding: 0 20px 80px 20px; }
+.content { padding: 20px 20px 80px 20px; }
 .category-title  { 
     text-transform: none;
     display: flex;

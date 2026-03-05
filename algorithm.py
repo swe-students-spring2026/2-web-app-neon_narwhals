@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 import re
 from datetime import datetime, timezone
@@ -96,7 +97,7 @@ def find_calories_per_serving(food_name):
     """find the number of calories per serving"""
     doc = food_db.foodstats.find_one({"Name": {"$regex": food_name, "$options": "i"}})
     if doc:
-        return doc["Calories"] / 100
+        return doc['Calories']/ 100
     else:
         return None
 
@@ -112,6 +113,7 @@ def get_usda_record(food_name: str) -> dict[str, Any] | None:
 
 def get_calories_per_gram(food_name: str) -> float:
     record = get_usda_record(food_name)
+    print(record.keys)
     if record and record.get("Calories") is not None:
         return record["Calories"] / 100.0
     return 0.0

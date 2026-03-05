@@ -5,13 +5,12 @@
   <meta name="viewport" content="width=393, initial-scale=1.0" />
   <title>MealPrep - New Grocery List</title>
   <!-- use the same bottom-nav styles as week/day/home -->
-  <link rel="stylesheet" href="/styles.css" />
-  <link rel="stylesheet" href="/groceryDisplay/style.css" />
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
   <div class="status-bar">
     <span>9:41</span>
-    <span>●●●</span>
   </div>
   <div class="page-header">New Grocery List</div>
   <div class="content">
@@ -24,13 +23,22 @@
         <span class="cat-display">Breakfast</span></div>
       {% for item in items %}
       <div class="item-row">
-        <button type="button" class="btn-delete">Delete</button>
+        <form method="POST" action="{{ url_for('grocery.delete_item', item_id=item._id) }}" style="display: inline;">
+          <button type="submit" class="btn-delete" onclick="return confirm('Delete this item?')">Delete</button>
+        </form>
         <span class="item-name">{{ item.name }}</span>
         <span class="item-amount">{{ item.amount }}</span>
-        <input type="checkbox" name="breakfast" id="{{ item.breakfast }}" {% if item.breakfast %}checked{% endif %}>
+        <form method="POST" action="{{ url_for('grocery.toggle_breakfast', item_id=item._id) }}" style="display: inline;">
+          <label>
+            <input type="checkbox" name="breakfast" 
+                   onchange="this.form.submit()"
+                   {% if item.breakfast %}checked{% endif %}>
+            Breakfast
+          </label>
+        </form>
       </div>
       {% endfor %}
-    </div>
+    </div>  
     {% endfor %}
 
     <div class="section-label add-section">Add New Item</div>
@@ -53,6 +61,7 @@
     <a href="/day" class="nav-tab">Day</a>
     <a href="/grocery-list" class="nav-tab active">Grocery</a>
     <a href="/grocery-history" class="nav-tab">History</a>
+    <a href="/login" class="nav-tab">Logout</a>
   </nav>
 </body>
 </html>
