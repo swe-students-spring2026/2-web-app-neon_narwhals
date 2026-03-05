@@ -27,7 +27,6 @@
           {{ day.name }}{% if day.is_today %} · Today{% endif %}
         </span>
         <div class="day-header-actions">
-          <a href="/day/{{ day.full_name }}" class="btn-small">Edit</a>
           <!-- small up/down arrows to swap this day's meals with neighbour days -->
           {% if not loop.first %}
           <form action="/week/swap/{{ day.full_name }}/up" method="POST" style="display:inline;">
