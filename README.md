@@ -8,7 +8,7 @@ Our meal prepping website allows users to conveniently organize their groceries 
 
 ## User stories
 
-[Link](https://github.com/swe-students-spring2026/2-web-app-neon_narwhals/issues/3#issue-3955535770)
+[Link for Issues](https://github.com/swe-students-spring2026/2-web-app-neon_narwhals/issues?q=is%3Aissue)
 
 ## Steps necessary to run the software
 
@@ -160,4 +160,6 @@ Once the server is running and pages load without errors, interact with our app!
 
 ## Task boards
 
-[Issue link](https://github.com/orgs/swe-students-spring2026/projects)
+[Link for Sprint 1](https://github.com/orgs/swe-students-spring2026/projects/11/views/2)
+
+[Link for Sprint 2](https://github.com/orgs/swe-students-spring2026/projects/60/views/2)
