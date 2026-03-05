@@ -42,7 +42,13 @@
     <div class="meal-row">
       <div class="meal-header">
         <div class="meal-type">Breakfast</div>
-        <div class="meal-calories">{{ bf_calories }} cal</div>
+        <div class="meal-calories">
+          {{ bf_calories }} cal
+          <!-- swap Breakfast down with Lunch -->
+          <form action="/day/swap/{{ weekday }}/breakfast/down" method="POST" style="display:inline;">
+            <button class="btn-small" type="submit">↓</button>
+          </form>
+        </div>
       </div>
       <div class="meal-items">
         {% for food in meals.breakfast %}
@@ -63,7 +69,17 @@
     <div class="meal-row">
       <div class="meal-header">
         <div class="meal-type">Lunch</div>
-        <div class="meal-calories">{{ ln_calories }} cal</div>
+        <div class="meal-calories">
+          {{ ln_calories }} cal
+          <!-- swap Lunch up with Breakfast -->
+          <form action="/day/swap/{{ weekday }}/lunch/up" method="POST" style="display:inline;">
+            <button class="btn-small" type="submit">↑</button>
+          </form>
+          <!-- swap Lunch down with Dinner -->
+          <form action="/day/swap/{{ weekday }}/lunch/down" method="POST" style="display:inline;">
+            <button class="btn-small" type="submit">↓</button>
+          </form>
+        </div>
       </div>
       <div class="meal-items">
         {% for food in meals.lunch %}
@@ -84,7 +100,13 @@
     <div class="meal-row">
       <div class="meal-header">
         <div class="meal-type">Dinner</div>
-        <div class="meal-calories">{{ dn_calories }} cal</div>
+        <div class="meal-calories">
+          {{ dn_calories }} cal
+          <!-- swap Dinner up with Lunch -->
+          <form action="/day/swap/{{ weekday }}/dinner/up" method="POST" style="display:inline;">
+            <button class="btn-small" type="submit">↑</button>
+          </form>
+        </div>
       </div>
       <div class="meal-items">
         {% for food in meals.dinner %}

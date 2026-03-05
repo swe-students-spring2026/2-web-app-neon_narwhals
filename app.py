@@ -567,13 +567,14 @@ def create_app():
     @app.route("/week/swap/<weekday>/<direction>", methods=["POST"])
     def swap_week_day(weekday, direction):
         """
-        Swap all meals for one day with the day above or below it in the week view
-
-        Args:
-            weekday (str): name like 'monday', 'tuesday', etc. (from template day.full_name)
-            direction (str): 'up' or 'down'
+        Swap all meals for one day with the day above or below it in the week view.
         """
-        weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        username = session.get("username")
+        if not username:
+            return redirect(url_for("login"))
+
+        weekdays = ["monday", "tuesday", "wednesday", "thursday",
+                    "friday", "saturday", "sunday"]
         day = weekday.lower()
         if day not in weekdays:
             return redirect(url_for("home"))
@@ -588,67 +589,79 @@ def create_app():
                 return redirect(url_for("home"))
             other = weekdays[idx + 1]
 
-        # swap weekday field between this day and the neighbour using a temporary label
-        tmp = "__tmp_swap__"
-        db.foods.update_many({"weekday": day}, {"$set": {"weekday": tmp}})
-        db.foods.update_many({"weekday": other}, {"$set": {"weekday": day}})
-        db.foods.update_many({"weekday": tmp}, {"$set": {"weekday": other}})
+        # Work with the weeklymeals collection that backs the UI
+        weekly_doc = grocery_db["weeklymeals"].find_one({"username": username})
+        if not weekly_doc or "plan" not in weekly_doc:
+            return redirect(url_for("home"))
 
-        # Also swap in weeklymeals if it exists
-        username = session.get('username')
-        if username:
-            weekly_plan = db.weeklymeals.find_one({"username": username})
-            if weekly_plan and 'plan' in weekly_plan:
-                plan = weekly_plan['plan']
-                # Find the correct keys (case-insensitive)
-                day_key = None
-                other_key = None
-                for key in plan.keys():
-                    if key.lower() == day:
-                        day_key = key
-                    elif key.lower() == other:
-                        other_key = key
-                if day_key and other_key:
-                    # Swap the day plans
-                    plan[day_key], plan[other_key] = plan[other_key], plan[day_key]
-                    db.weeklymeals.update_one({"username": username}, {"$set": {"plan": plan}})
+        plan = weekly_doc["plan"]
+        # Keys are title‑cased in the plan (e.g., 'Monday')
+        day_key = day.title()
+        other_key = other.title()
+        if day_key not in plan or other_key not in plan:
+            return redirect(url_for("home"))
+
+        # Swap the entire day blocks
+        plan[day_key], plan[other_key] = plan[other_key], plan[day_key]
+        grocery_db["weeklymeals"].update_one(
+            {"_id": weekly_doc["_id"]},
+            {"$set": {"plan": plan}},
+        )
 
         return redirect(url_for("home"))
 
     @app.route("/day/swap/<weekday>/<meal>/<direction>", methods=["POST"])
     def swap_day_meal(weekday, meal, direction):
         """
-        Swap a meal with the adjacent meal in the day view
-
-        Args:
-            weekday (str): name like 'monday', 'tuesday', etc.
-            meal (str): 'breakfast', 'lunch', or 'dinner'
-            direction (str): 'up' or 'down'
+        Swap a meal (Breakfast / Lunch / Dinner) with the adjacent meal
+        in the *same day* on the weeklymeals.plan structure.
         """
-        username = session.get('username')
+        username = session.get("username")
         if not username:
             return redirect(url_for("login"))
-        
-        meals = ["breakfast", "lunch", "dinner"]
+
         meal = meal.lower()
-        if meal not in meals:
+        order = ["breakfast", "lunch", "dinner"]
+        if meal not in order:
             return redirect(url_for("day_view", weekday=weekday))
 
-        idx = meals.index(meal)
+        idx = order.index(meal)
         if direction == "up":
             if idx == 0:
                 return redirect(url_for("day_view", weekday=weekday))
-            target = meals[idx - 1]
+            target = order[idx - 1]
         else:  # down
-            if idx == len(meals) - 1:
+            if idx == len(order) - 1:
                 return redirect(url_for("day_view", weekday=weekday))
-            target = meals[idx + 1]
+            target = order[idx + 1]
 
-        # swap time_in_day field between this meal and the target using a temporary label
-        tmp = "__tmp_swap_meal__"
-        db.foods.update_many({"weekday": weekday.lower(), "time_in_day": meal, "username": username}, {"$set": {"time_in_day": tmp}})
-        db.foods.update_many({"weekday": weekday.lower(), "time_in_day": target, "username": username}, {"$set": {"time_in_day": meal}})
-        db.foods.update_many({"weekday": weekday.lower(), "time_in_day": tmp, "username": username}, {"$set": {"time_in_day": target}})
+        # Load the weekly plan from the same collection used by day_view
+        weekly_doc = grocery_db["weeklymeals"].find_one({"username": username})
+        if not weekly_doc or "plan" not in weekly_doc:
+            return redirect(url_for("day_view", weekday=weekday))
+
+        plan = weekly_doc["plan"]
+        day_key = weekday.title()
+        if day_key not in plan:
+            return redirect(url_for("day_view", weekday=weekday))
+
+        # Plan keys are title-cased meal names
+        meal_key_map = {"breakfast": "Breakfast", "lunch": "Lunch", "dinner": "Dinner"}
+        src_key = meal_key_map[meal]
+        dst_key = meal_key_map[target]
+
+        day_plan = plan.get(day_key, {})
+        if src_key not in day_plan or dst_key not in day_plan:
+            return redirect(url_for("day_view", weekday=weekday))
+
+        # Swap the entire meal blocks (including items and totals)
+        day_plan[src_key], day_plan[dst_key] = day_plan[dst_key], day_plan[src_key]
+        plan[day_key] = day_plan
+
+        grocery_db["weeklymeals"].update_one(
+            {"_id": weekly_doc["_id"]},
+            {"$set": {"plan": plan}},
+        )
 
         return redirect(url_for("day_view", weekday=weekday))
 

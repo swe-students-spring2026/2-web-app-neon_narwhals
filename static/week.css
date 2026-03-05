@@ -93,6 +93,8 @@
 .delete-week-row {
   padding: 16px 20px;
   border-bottom: 1px solid #000;
+  /* add extra space so the button + confirm dialog are not cramped against the bottom nav */
+  margin-bottom: 80px;
 }
 
 .btn-black-full {
