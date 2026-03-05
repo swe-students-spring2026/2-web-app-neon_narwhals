@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
-food_db = cxn['groceryfood']  # Use groceryfood database for consistency
+food_db = cxn[os.getenv("MONGO_DBNAME")]
 
 
 DAYS: list[str] = [
@@ -75,31 +75,25 @@ MEAL_CALORIE_SPLITS: dict[str, dict[str, float]] = {
 
 
 def search_food_data(food_name):
-    """function for searching food information"""
     doc = food_db.foodstats.find_one({"Name": {"$regex": food_name, "$options": "i"}})
     if doc:
         doc["_id"] = str(doc["_id"])
         return doc
-    else:
-        return None
+    return None
 
 
 def lookup_food_category(food_name):
-    """function for finding the category of the food"""
     doc = food_db.foodstats.find_one({"name": {"$regex": food_name, "$options": "i"}})
     if doc:
         return doc["Category"]
-    else:
-        return None
+    return None
 
 
 def find_calories_per_serving(food_name):
-    """find the number of calories per serving"""
     doc = food_db.foodstats.find_one({"Name": {"$regex": food_name, "$options": "i"}})
     if doc:
-        return doc['Calories']/ 100
-    else:
-        return None
+        return doc["Calories"] / 100
+    return None
 
 
 def parse_grams(amount: Any) -> float:
@@ -113,7 +107,6 @@ def get_usda_record(food_name: str) -> dict[str, Any] | None:
 
 def get_calories_per_gram(food_name: str) -> float:
     record = get_usda_record(food_name)
-    print(record.keys)
     if record and record.get("Calories") is not None:
         return record["Calories"] / 100.0
     return 0.0
@@ -135,15 +128,39 @@ def build_food_pool(grocery_items: list[dict[str, Any]]) -> list[dict[str, Any]]
         cal_per_gram = (total_calories / total_grams) if total_grams > 0 else 0.0
         pool.append(
             {
+                "_db_id": item["_id"],
                 "foodName": name,
                 "foodCategory": item.get("food_type", "Unknown"),
                 "isBreakfast": item.get("time_in_day", "").lower() == "breakfast",
+                "original_grams": total_grams,
                 "remaining_grams": total_grams,
                 "cal_per_gram": cal_per_gram,
                 "remaining_calories": total_calories,
             }
         )
     return pool
+
+
+def update_current_list_amounts(pool: list[dict[str, Any]]) -> None:
+    for item in pool:
+        grams_used = item["original_grams"] - item["remaining_grams"]
+        if grams_used > 0:
+            food_db["current_list"].update_one(
+                {"_id": item["_db_id"]},
+                {"$set": {"amount": str(int(round(item["remaining_grams"])))}}
+            )
+
+
+def restore_grams_to_current_list(
+    user_id: str, food_name: str, grams: float
+) -> None:
+    item = food_db["current_list"].find_one({"username": user_id, "name": food_name})
+    if item:
+        current = parse_grams(item.get("amount", "0"))
+        food_db["current_list"].update_one(
+            {"_id": item["_id"]},
+            {"$set": {"amount": str(int(round(current + grams)))}}
+        )
 
 
 def fill_meal_slot(
@@ -168,7 +185,13 @@ def fill_meal_slot(
         budget = cat_budget[category]
         items_used = 0
 
-        candidates = [f for f in pool if f["foodCategory"] == category and f["isBreakfast"] == is_breakfast and f["remaining_grams"] > 0 and f["cal_per_gram"] > 0]
+        candidates = [
+            f for f in pool
+            if f["foodCategory"] == category
+            and f["isBreakfast"] == is_breakfast
+            and f["remaining_grams"] > 0
+            and f["cal_per_gram"] > 0
+        ]
 
         if not candidates:
             missing_categories.append(category)
@@ -224,7 +247,8 @@ def build_meal_plan(user_id: str) -> dict[str, Any]:
 
         for meal in ("Breakfast", "Lunch", "Dinner"):
             goal = CALORIE_GOALS[meal]
-            items, total_cal, missing = fill_meal_slot(pool, meal, goal, used_protein_today)
+            items, total_cal, missing = fill_meal_slot(
+                pool, meal, goal, used_protein_today)
             all_missing.update(missing)
             daily_plan[meal] = {
                 "items": items,
@@ -234,11 +258,14 @@ def build_meal_plan(user_id: str) -> dict[str, Any]:
 
         weekly_plan[day] = daily_plan
 
+    update_current_list_amounts(pool)
     push_weekly_plan(user_id, weekly_plan, sorted(all_missing))
     return {"plan": weekly_plan, "missing_categories": sorted(all_missing)}
 
 
-def push_weekly_plan(user_id: str, plan: dict[str, Any], missing_categories: list[str]) -> None:
+def push_weekly_plan(
+    user_id: str, plan: dict[str, Any], missing_categories: list[str]
+) -> None:
     food_db.weeklymeals.update_one(
         {"username": user_id},
         {
@@ -268,8 +295,14 @@ if __name__ == "__main__":
         for day, meals in plan.items():
             print(f"\n  -- {day} --")
             for meal_name, data in meals.items():
-                print(f"    {meal_name}: {data['total_calories']} / {data['calorie_goal']} kcal")
+                print(
+                    f"    {meal_name}: {data['total_calories']} / "
+                    f"{data['calorie_goal']} kcal"
+                )
                 for it in data["items"]:
-                    print(f"      • {it['foodName']:20s} {it['grams']:5d}g  {it['calories']:6.1f} kcal  [{it['foodCategory']}]")
+                    print(
+                        f"      • {it['foodName']:20s} {it['grams']:5d}g"
+                        f"  {it['calories']:6.1f} kcal  [{it['foodCategory']}]"
+                    )
         print()
     print("weeklymeals updated for:", food_db.weeklymeals.distinct("username"))
