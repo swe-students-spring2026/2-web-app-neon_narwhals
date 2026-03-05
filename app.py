@@ -933,7 +933,7 @@ def create_app():
         # Create new user
         app.db.users.insert_one({
             "username": username,
-            "passowrd": password,
+            "password": password,
             "created_at": datetime.datetime.utcnow()
         })
         session['username'] = username
