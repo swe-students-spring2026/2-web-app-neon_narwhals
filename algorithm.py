@@ -96,9 +96,8 @@ def lookup_food_category(food_name):
 def find_calories_per_serving(food_name):
     """find the number of calories per serving"""
     doc = food_db.foodstats.find_one({"Name": {"$regex": food_name, "$options": "i"}})
-    print(doc.Calories)
     if doc:
-        return doc.Calories / 100
+        return doc['Calories']/ 100
     else:
         return None
 
