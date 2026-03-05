@@ -54,9 +54,7 @@ body {
     align-items: center;
     justify-content: space-between;
 }
-.category-title .cat-display {
-    justify-content: space-evenly;
-}
+
 .item-row {
     display: flex;
     align-items: center;
