@@ -42,6 +42,11 @@
     {% endfor %}
 
     <div class="section-label add-section">Add New Item</div>
+    {%if error%}
+    <div class="error-message">
+      {{ error }}
+    </div>
+    {%endif%}
     <form method="POST" action="{{ url_for('grocery.grocery_list') }}">
       <div class="form-group">
         <label for="food-name">Food Name:</label>
