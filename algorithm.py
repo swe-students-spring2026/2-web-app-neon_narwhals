@@ -235,6 +235,7 @@ def fill_meal_slot(
 def build_meal_plan(user_id: str) -> dict[str, Any]:
     grocery_items = list(food_db["current_list"].find({"username": user_id}))
     if not grocery_items:
+        push_weekly_plan(user_id,{},[])
         return {}
 
     pool = build_food_pool(grocery_items)

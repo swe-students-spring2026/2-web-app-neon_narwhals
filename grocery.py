@@ -245,6 +245,21 @@ def grocery_list():
         #     print("no user")
         #     return redirect(url_for("auth.login"))
         food_category = get_item_category(name)
+        if food_category is None:
+            items = current_week.find({"username": username})
+            categories_dict = {}
+            for item in items:
+                item['_id'] = str(item['_id'])
+                item['breakfast'] = item.get('time_in_day', '').lower() == 'breakfast'
+                category = item.get("food_type", "other")
+                if category not in categories_dict:
+                    categories_dict[category] = []
+                categories_dict[category].append(item)
+            return render_template("grocery-list.html", 
+                                   categories = categories_dict, 
+                                   error = "Sorry we don't recognize this food. Please try a different food item"
+                                   )
+
         total_calories = calculate_item_calories(name,amount)    
         print(f"POST - Name: {name}, Amount: {amount}, Breakfast: {is_breakfast} cal: {total_calories}")    
 
