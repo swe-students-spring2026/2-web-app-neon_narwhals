@@ -161,7 +161,7 @@ def toggle_breakfast(item_id):
             new_value = "empty" if current_value else "breakfast"
             current_week.update_one(
                 {"_id": ObjectId(item_id)},
-                {"$set": {"time_in_day": new_value}}
+                {"$set": {"time_in_day": new_value, "breakfast": not current_value}}
             )
             print(f"Toggled breakfast for {item.get('name')} to {new_value}")
             
@@ -169,7 +169,7 @@ def toggle_breakfast(item_id):
             build_meal_plan(username)
             
             if request.headers.get('Content-Type') == 'application/json':
-                return jsonify({"success": True, "breakfast": new_value == "breakfast"})
+                return jsonify({"success": True, "breakfast": not current_value})
         
         return redirect(url_for("grocery.grocery_list"))
     except Exception as e:
@@ -256,6 +256,7 @@ def grocery_list():
                 "name": name,
                 "amount": amount,
                 "time_in_day": "breakfast" if is_breakfast else "empty",
+                "breakfast": is_breakfast,
                 "food_type": food_category,
                 "date_added": datetime.datetime.utcnow(),
                 "calories": total_calories
@@ -275,6 +276,7 @@ def grocery_list():
 
     for item in items:
         item['_id'] = str(item['_id'])
+        item['breakfast'] = item.get('time_in_day', '').lower() == 'breakfast'
         category = item.get("food_type", "other")
 
         if category not in categories_dict:
