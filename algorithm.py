@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 cxn = pymongo.MongoClient(os.getenv("MONGO_URI"))
-food_db = cxn[os.getenv("MONGO_DBNAME")]
+food_db = cxn['groceryfood']  # Use groceryfood database for consistency
 
 
 DAYS: list[str] = [

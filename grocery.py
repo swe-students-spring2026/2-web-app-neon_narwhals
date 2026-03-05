@@ -135,9 +135,16 @@ def label_existing_items():
 @grocery_bp.route("/delete-item/<item_id>", methods=["POST"])
 def delete_item(item_id):
     try:
-        result = current_week.delete_one({"_id": ObjectId(item_id)})
-        if result.deleted_count > 0:
-            print(f"Deleted item with id: {item_id}")
+        item = current_week.find_one({"_id": ObjectId(item_id)})
+        if item:
+            username = item.get("username")
+            result = current_week.delete_one({"_id": ObjectId(item_id)})
+            if result.deleted_count > 0:
+                print(f"Deleted item with id: {item_id}")
+                # Update the weekly meal plan after deleting item
+                build_meal_plan(username)
+            else:
+                print(f"Item not found: {item_id}")
         else:
             print(f"Item not found: {item_id}")
     except Exception as e:
@@ -149,12 +156,17 @@ def toggle_breakfast(item_id):
     try:
         item = current_week.find_one({"_id": ObjectId(item_id)})
         if item:
-            current_value = item.get("breakfast", False)
+            username = item.get("username")
+            current_value = item.get("time_in_day", "").lower() == "breakfast"
+            new_value = "empty" if current_value else "breakfast"
             current_week.update_one(
                 {"_id": ObjectId(item_id)},
-                {"$set": {"breakfast": not current_value}}
+                {"$set": {"time_in_day": new_value, "breakfast": not current_value}}
             )
-            print(f"Toggled breakfast for {item.get('name')} to {not current_value}")
+            print(f"Toggled breakfast for {item.get('name')} to {new_value}")
+            
+            # Update the weekly meal plan after toggling
+            build_meal_plan(username)
             
             if request.headers.get('Content-Type') == 'application/json':
                 return jsonify({"success": True, "breakfast": not current_value})
@@ -244,12 +256,17 @@ def grocery_list():
                 "name": name,
                 "amount": amount,
                 "time_in_day": "breakfast" if is_breakfast else "empty",
+                "breakfast": is_breakfast,
                 "food_type": food_category,
                 "date_added": datetime.datetime.utcnow(),
                 "calories": total_calories
             })
 
             print(f"Added item{name} ({amount}g) - Category: {food_category}")
+            
+            # Update the weekly meal plan after adding item
+            build_meal_plan(username)
+            
         return redirect(url_for("grocery.grocery_list"))
    
    # GET request
@@ -259,6 +276,7 @@ def grocery_list():
 
     for item in items:
         item['_id'] = str(item['_id'])
+        item['breakfast'] = item.get('time_in_day', '').lower() == 'breakfast'
         category = item.get("food_type", "other")
 
         if category not in categories_dict:
