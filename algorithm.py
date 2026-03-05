@@ -128,16 +128,17 @@ def build_food_pool(grocery_items: list[dict[str, Any]]) -> list[dict[str, Any]]
     pool: list[dict[str, Any]] = []
     for item in grocery_items:
         name = item["name"]
-        cal_per_gram = get_calories_per_gram(name)
-        total_grams = float(item.get("food_amount", 0))
+        total_grams = parse_grams(item.get("amount", 0))
+        total_calories = float(item.get("calories", 0))
+        cal_per_gram = (total_calories / total_grams) if total_grams > 0 else 0.0
         pool.append(
             {
                 "foodName": name,
-                "foodCategory": get_food_category(name),
+                "foodCategory": item.get("food_type", "Unknown"),
                 "isBreakfast": item.get("time_in_day", "").lower() == "breakfast",
                 "remaining_grams": total_grams,
                 "cal_per_gram": cal_per_gram,
-                "remaining_calories": cal_per_gram * total_grams,
+                "remaining_calories": total_calories,
             }
         )
     return pool
@@ -207,7 +208,7 @@ def fill_meal_slot(
 
 
 def build_meal_plan(user_id: str) -> dict[str, Any]:
-    grocery_items = list(food_db.foods.find({"username": user_id}))
+    grocery_items = list(food_db["current_list"].find({"username": user_id}))
     if not grocery_items:
         return {}
 
@@ -250,7 +251,7 @@ def push_weekly_plan(user_id: str, plan: dict[str, Any], missing_categories: lis
 
 
 if __name__ == "__main__":
-    usernames = food_db.foods.distinct("username")
+    usernames = food_db["current_list"].distinct("username")
     if not usernames:
         print("No users found in foods collection.")
     for username in usernames:
