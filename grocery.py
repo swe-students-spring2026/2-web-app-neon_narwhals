@@ -95,6 +95,7 @@ def add_old_to_history(username):
 
     for item in old_items:
         current_week.delete_one({"_id":item["_id"]})
+    build_meal_plan(username)
 #== CRUD ==#
 def label_existing_items():
     items = list(current_week.find({

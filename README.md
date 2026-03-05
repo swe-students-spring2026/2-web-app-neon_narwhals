@@ -8,7 +8,7 @@ Our meal prepping website allows users to conveniently organize their groceries 
 
 ## User stories
 
-[Link](https://github.com/swe-students-spring2026/2-web-app-neon_narwhals/issues/3#issue-3955535770)
+[Link for Issues](https://github.com/swe-students-spring2026/2-web-app-neon_narwhals/issues?q=is%3Aissue)
 
 ## Steps necessary to run the software
 
@@ -18,7 +18,9 @@ Below are end‑to‑end steps to get the project running on a new machine.
 
 - **Python** 3.10 or newer installed 
 - **Git**
-- **MongoDB** running locally (e.g. `mongodb://localhost:27017`)
+- **MongoDB**, either:
+  - running locally (e.g. `mongodb://localhost:27017`), **or**
+  - a MongoDB Atlas cluster with a working connection string
 
 ### Clone the repository
 
@@ -31,6 +33,7 @@ If you are using SSH, clone with the SSH URL instead.
 
 ### Install dependencies and create environment
 
+You can use **pip + venv** or **pipenv**. Both work.
 
 **Using pipenv:**
 
@@ -40,6 +43,32 @@ pipenv install -r requirements.txt
 ```
 
 This creates a virtual environment and installs all dependencies from `requirements.txt`. 
+
+**Using venv + pip:**
+
+From inside the project folder:
+
+**Windows (PowerShell / Command Prompt):**
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+**macOS / Linux:**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Your prompt should show `(.venv)` when the virtual environment is active. Then install dependencies!
+
+```bash
+pip install -r requirements.txt
+```
+
+This installs Flask, pymongo, python‑dotenv, and other libraries the app depends on.
 
 ###  Configure environment variables (`.env`)
 
@@ -65,22 +94,35 @@ Our app reads its configuration from a `.env` file in the project root.
    # FLASK_ENV=development
    ```
 
+   - If you are using **MongoDB Atlas**, replace `MONGO_URI` with the Atlas connection string, for example:
+
+     ```env
+     MONGO_URI="mongodb+srv://<username>:<password>@cluster0.xxxxxx.mongodb.net"
+     MONGO_DBNAME=mealprep
+     ```
 
 ###  Start MongoDB
 
 Make sure MongoDB server is running before starting Flask:
 
 - **Local MongoDB** – start the MongoDB service (e.g. `mongod` or via your OS service manager).
+- **Atlas** – nothing to start but make ensure the cluster is “Running” in the Atlas UI.
 
 ###  Run the Flask app
 
 From the project root...
 
+**If you used pipenv:**
 
 ```bash
 pipenv run python app.py
 ```
 
+**If you used venv:** activate it first, then:
+
+```bash
+python app.py
+```
 
 Output should look like something like this...
 
@@ -109,13 +151,11 @@ Once the server is running and pages load without errors, interact with our app!
 
   - Use the Grocery tab to add items, Day and Week views to edit items, and delete either individual meals or whole days.
 - **Swap days in Week view:**
-  - On week view use the **↑ / ↓** arrows in each day header to swap all meals for that day with the day above/below.
+  - On `/week` use the **↑ / ↓** arrows in each day header to swap all meals for that day with the day above/below.
 - **Swap meals within a day:**
-  - On day view use the small **↑ / ↓** arrows in the Breakfast/Lunch/Dinner headers to move a whole meal block up or down (e.g. swap Lunch with Dinner).
+  - On `/day` use the small **↑ / ↓** arrows in the Breakfast/Lunch/Dinner headers to move a whole meal block up or down (e.g. swap Lunch with Dinner).
 - **Grocery list & history:**
   - Visit `/grocery-list` to see the grocery layout and `/grocery-history` to see the history mock‑up. These screens share the same bottom navigation as the Home/Week/Day views.
-- **Algorithm**
-  -Our algorithm allocates the groceries inserted by user in grocery list evenly throughout the week. Making sure user reaches nutritional goals
 
 
 ## Task boards
