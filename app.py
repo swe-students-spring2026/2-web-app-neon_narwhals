@@ -69,6 +69,7 @@ def create_app():
     tlsCAFile=certifi.where()  # This fixes the SSL certificate error
 )
     db = cxn[os.getenv("MONGO_DBNAME")]
+    grocery_db = cxn['groceryfood']
    # Attach db to app for use in routes defined outside create_app
     app.db = db
 
@@ -111,100 +112,64 @@ def create_app():
         if not username:
             return redirect(url_for("login"))
 
-        # First try to get data from weeklymeals collection (generated plans)
-        weekly_plan_doc = db.weeklymeals.find_one({"username": username})
-        if weekly_plan_doc and "plan" in weekly_plan_doc:
-            # Use generated meal plan data
-            plan = weekly_plan_doc["plan"]
-            # Ensure all days are in the plan
-            weekday_display = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-            for day_name in weekday_display:
-                if day_name not in plan:
-                    plan[day_name] = {
-                        'Breakfast': {'items': [], 'total_calories': 0},
-                        'Lunch': {'items': [], 'total_calories': 0},
-                        'Dinner': {'items': [], 'total_calories': 0}
-                    }
-            # Update if changed
-            if plan != weekly_plan_doc["plan"]:
-                db.weeklymeals.update_one({"username": username}, {"$set": {"plan": plan}})
-            week_days = []
-            weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-            weekday_display = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        # Always read from current_list collection for real-time updates
+        food_docs = list(grocery_db["current_list"].find({"username": username}).sort("date_added", -1))
+        # Check if request wants JSON (API usage)
+        if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
+            # Convert ObjectId to string for JSON serialization
+            for doc in food_docs:
+                doc['_id'] = str(doc['_id'])
+            return jsonify({"foods": food_docs, "source": "current_list"})
 
-            # Get current day for highlighting
-            today_weekday = datetime.datetime.now().strftime('%A').lower()
-
-            for i, weekday in enumerate(weekdays):
-                day_name = weekday_display[i]
-                day_plan = plan.get(day_name, {})
-
-                # Convert algorithm format to template format
-                meals = {}
-                for meal_name in ['Breakfast', 'Lunch', 'Dinner']:
-                    meal_data = day_plan.get(meal_name, {})
-                    meals[meal_name.lower()] = [
-                        {
-                            'name': item['foodName'],
-                            'food_type': item.get('foodCategory', 'Unknown'),
-                            'food_amount': item['grams'],
-                            'calorie_amount': item['calories'],
-                            'weekday': weekday,
-                            'time_in_day': meal_name.lower(),
-                            'username': username,
-                            'is_generated': True
-                        }
-                        for item in meal_data.get('items', [])
-                    ]
-
-                day_data = {
-                    'name': day_name,
-                    'full_name': weekday,
-                    'is_today': weekday == today_weekday,
-                    'meals': meals
-                }
-                week_days.append(day_data)
-
-            # Check if request wants JSON (API usage)
-            if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
-                # Convert to JSON format
-                foods_list = []
-                for day_data in week_days:
-                    for meal_name, meal_items in day_data['meals'].items():
-                        foods_list.extend(meal_items)
-                return jsonify({"foods": foods_list, "source": "generated_plan"})
-        else:
-            # Fall back to manual foods collection
-            food_docs = list(db.foods.find({"username": username}).sort("created_at", -1))
-            # Check if request wants JSON (API usage)
-            if request.headers.get('Content-Type') == 'application/json' or request.args.get('format') == 'json':
-                # Convert ObjectId to string for JSON serialization
-                for doc in food_docs:
-                    doc['_id'] = str(doc['_id'])
-                return jsonify({"foods": food_docs, "source": "manual_foods"})
-
-            # Organize foods by weekday and meal time for weekly view
-            week_days = []
-            weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-            weekday_display = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-            # Get current day for highlighting
-            today_weekday = datetime.datetime.now().strftime('%A').lower()
-            for i, weekday in enumerate(weekdays):
-                # Filter foods for this weekday
-                day_foods = [food for food in food_docs if food.get('weekday', '').lower() == weekday]
-                # Organize by meal time
-                meals = {
-                    'breakfast': [food for food in day_foods if food.get('time_in_day', '').lower() == 'breakfast'],
-                    'lunch': [food for food in day_foods if food.get('time_in_day', '').lower() == 'lunch'],
-                    'dinner': [food for food in day_foods if food.get('time_in_day', '').lower() == 'dinner']
-                }
-                day_data = {
-                    'name': weekday_display[i],
-                    'full_name': weekday,
-                    'is_today': weekday == today_weekday,
-                    'meals': meals
-                }
-                week_days.append(day_data)
+        # Organize foods by weekday and meal time for weekly view
+        week_days = []
+        weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+        weekday_display = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        # Get current day for highlighting
+        today_weekday = datetime.datetime.now().strftime('%A').lower()
+        for i, weekday in enumerate(weekdays):
+            # Show all foods on every day for meal planning flexibility
+            day_foods = food_docs
+            # Organize by meal time - show foods in their intended meals, plus unassigned foods in all meals
+            meals = {
+                'breakfast': [{
+                    'name': food['name'],
+                    'food_type': food.get('food_type', 'Unknown'),
+                    'food_amount': food.get('amount', 0),
+                    'calorie_amount': food.get('calories', 0),
+                    'weekday': weekday,
+                    'time_in_day': 'breakfast',
+                    'username': username,
+                    'is_generated': False
+                } for food in day_foods if food.get('time_in_day', '').lower() in ['breakfast', 'empty', '']],
+                'lunch': [{
+                    'name': food['name'],
+                    'food_type': food.get('food_type', 'Unknown'),
+                    'food_amount': food.get('amount', 0),
+                    'calorie_amount': food.get('calories', 0),
+                    'weekday': weekday,
+                    'time_in_day': 'lunch',
+                    'username': username,
+                    'is_generated': False
+                } for food in day_foods if food.get('time_in_day', '').lower() in ['lunch', 'empty', '']],
+                'dinner': [{
+                    'name': food['name'],
+                    'food_type': food.get('food_type', 'Unknown'),
+                    'food_amount': food.get('amount', 0),
+                    'calorie_amount': food.get('calories', 0),
+                    'weekday': weekday,
+                    'time_in_day': 'dinner',
+                    'username': username,
+                    'is_generated': False
+                } for food in day_foods if food.get('time_in_day', '').lower() in ['dinner', 'empty', '']]
+            }
+            day_data = {
+                'name': weekday_display[i],
+                'full_name': weekday,
+                'is_today': weekday == today_weekday,
+                'meals': meals
+            }
+            week_days.append(day_data)
 
         # Week navigation data
         week_label = "Current Week"
@@ -234,67 +199,46 @@ def create_app():
         if weekday is None:
             weekday = datetime.datetime.now().strftime('%A').lower()
 
-        # First try to get data from weeklymeals collection (generated plans)
-        weekly_plan_doc = db.weeklymeals.find_one({"username": username})
-        if weekly_plan_doc and "plan" in weekly_plan_doc:
-            # Use generated meal plan data
-            plan = weekly_plan_doc["plan"]
-            weekday_display = weekday.title()
-
-            # Find the day in the plan (case-insensitive match)
-            day_plan = None
-            for day_name in plan.keys():
-                if day_name.lower() == weekday.lower():
-                    day_plan = plan[day_name]
-                    weekday_display = day_name
-                    break
-
-            if day_plan:
-                # Convert algorithm format to template format
-                meals = {}
-                total_calories = 0
-                total_protein = 0
-
-                for meal_name in ['Breakfast', 'Lunch', 'Dinner']:
-                    meal_data = day_plan.get(meal_name, {})
-                    meal_items = []
-
-                    for item in meal_data.get('items', []):
-                        food_item = {
-                            'name': item['foodName'],
-                            'food_type': item.get('foodCategory', 'Unknown'),
-                            'food_amount': item['grams'],
-                            'calorie_amount': item['calories'],
-                            'weekday': weekday.lower(),
-                            'time_in_day': meal_name.lower(),
-                            'username': username,
-                            'is_generated': True
-                        }
-                        meal_items.append(food_item)
-                        total_calories += item['calories']
-                        if item.get('foodCategory') == 'Protein Foods':
-                            total_protein += item['grams']
-
-                    meals[meal_name.lower()] = meal_items
-            else:
-                # Day not found in plan
-                meals = {'breakfast': [], 'lunch': [], 'dinner': []}
-                total_calories = 0
-                total_protein = 0
-        else:
-            # Fall back to manual foods collection
-            # Get foods for this specific day
-            day_foods = list(db.foods.find({"weekday": weekday.lower(), "username": username}).sort("created_at", -1))
-            # Organize by meal time
-            meals = {
-                'breakfast': [food for food in day_foods if food.get('time_in_day', '').lower() == 'breakfast'],
-                'lunch': [food for food in day_foods if food.get('time_in_day', '').lower() == 'lunch'],
-                'dinner': [food for food in day_foods if food.get('time_in_day', '').lower() == 'dinner']
-            }
-            # Calculate basic summary
-            total_calories = sum(food.get('calorie_amount', 0) for food in day_foods)
-            total_protein = sum(food.get('food_amount', 0) for food in day_foods if food.get('food_type') == 'protein')
-            weekday_display = weekday.title()
+        # Always read from current_list collection for real-time updates
+        # Get all foods for the user (not filtered by weekday for flexibility)
+        day_foods = list(grocery_db["current_list"].find({"username": username}).sort("date_added", -1))
+        # Organize by meal time - show foods in their intended meals, plus unassigned foods in all meals
+        meals = {
+            'breakfast': [{
+                'name': food['name'],
+                'food_type': food.get('food_type', 'Unknown'),
+                'food_amount': food.get('amount', 0),
+                'calorie_amount': food.get('calories', 0),
+                'weekday': weekday.lower(),
+                'time_in_day': 'breakfast',
+                'username': username,
+                'is_generated': False
+            } for food in day_foods if food.get('time_in_day', '').lower() in ['breakfast', 'empty', '']],
+            'lunch': [{
+                'name': food['name'],
+                'food_type': food.get('food_type', 'Unknown'),
+                'food_amount': food.get('amount', 0),
+                'calorie_amount': food.get('calories', 0),
+                'weekday': weekday.lower(),
+                'time_in_day': 'lunch',
+                'username': username,
+                'is_generated': False
+            } for food in day_foods if food.get('time_in_day', '').lower() in ['lunch', 'empty', '']],
+            'dinner': [{
+                'name': food['name'],
+                'food_type': food.get('food_type', 'Unknown'),
+                'food_amount': food.get('amount', 0),
+                'calorie_amount': food.get('calories', 0),
+                'weekday': weekday.lower(),
+                'time_in_day': 'dinner',
+                'username': username,
+                'is_generated': False
+            } for food in day_foods if food.get('time_in_day', '').lower() in ['dinner', 'empty', '']]
+        }
+        # Calculate basic summary
+        total_calories = sum(food.get('calories', 0) for food in day_foods)
+        total_protein = sum(food.get('amount', 0) for food in day_foods if food.get('food_type') == 'protein')
+        weekday_display = weekday.title()
 
         # Day navigation
         weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
