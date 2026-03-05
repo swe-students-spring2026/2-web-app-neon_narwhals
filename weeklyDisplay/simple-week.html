@@ -27,6 +27,17 @@
           {{ day.name }}{% if day.is_today %} · Today{% endif %}
         </span>
         <div class="day-header-actions">
+          <!-- small up/down arrows to swap this day's meals with neighbour days -->
+          {% if not loop.first %}
+          <form action="/week/swap/{{ day.full_name }}/up" method="POST" style="display:inline;">
+            <button class="btn-small" type="submit">↑</button>
+          </form>
+          {% endif %}
+          {% if not loop.last %}
+          <form action="/week/swap/{{ day.full_name }}/down" method="POST" style="display:inline;">
+            <button class="btn-small" type="submit">↓</button>
+          </form>
+          {% endif %}
           <form action="/delete-day/{{ day.full_name }}" method="POST"
                 style="display:inline;"
                 onsubmit="return confirm('Delete all meals for {{ day.name }}?')">
