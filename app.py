@@ -614,7 +614,7 @@ def create_app():
     def swap_day_meal(weekday, meal, direction):
         """
         Swap a meal (Breakfast / Lunch / Dinner) with the adjacent meal
-        in the *same day* on the weeklymeals.plan structure.
+        in the same day.
         """
         username = session.get("username")
         if not username:

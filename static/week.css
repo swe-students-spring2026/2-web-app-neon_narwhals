@@ -43,11 +43,14 @@
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
+  /* take up remaining space so actions stay pinned to the right */
+  flex: 1;
 }
 
 .day-header-actions {
   display: flex;
   gap: 8px;
+  justify-content: flex-end;
 }
 
 .btn-small {
