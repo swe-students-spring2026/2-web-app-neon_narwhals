@@ -8,3 +8,5 @@ MarkupSafe==1.1.1
 pymongo==3.11.3
 python-dotenv==0.16.0
 Werkzeug==1.0.1
+dnspython==2.1.0
+certifi

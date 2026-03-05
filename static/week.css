@@ -1,34 +1,24 @@
-/* Week nav bar */
-.week-nav {
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+.status-bar {
+  height: 50px;
+  background: #fff;
   display: flex;
   align-items: center;
+  padding: 0 20px;
+  font-size: 12px;
   justify-content: space-between;
-  padding: 12px 20px;
+}
+
+.page-header {
+  text-align: center;
+  padding: 12px 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
   border-bottom: 1px solid #000;
 }
 
-.week-nav-btn {
-  background: #000;
-  color: #fff;
-  border: none;
-  padding: 6px 14px;
-  font-size: 13px;
-  cursor: pointer;
-  font-family: inherit;
-  text-decoration: none;
-  display: inline-block;
-}
-
-.week-nav-label {
-  font-size: 14px;
-  font-weight: 600;
-  text-align: center;
-}
-
-.week-nav-sub {
-  font-size: 11px;
-  text-align: center;
-}
+.content { padding: 0; }
 
 /* Day block */
 .day-block {

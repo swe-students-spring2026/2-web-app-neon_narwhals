@@ -4,29 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=393, initial-scale=1.0" />
   <title>MealPrep – Week</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="week.css" />
+  <!-- base styles (status bar, shared bottom nav, etc.) -->
+  <link rel="stylesheet" href="/static/styles.css" />
+  <!-- week-specific layout on top of the shared styles -->
+  <link rel="stylesheet" href="/static/week.css" />
 </head>
 <body>
 
   <div class="status-bar">
     <span>9:41</span>
-    <span>●●●</span>
   </div>
 
   <div class="page-header">Week View</div>
 
   <div class="content">
-
-    <!-- Week Navigation -->
-    <div class="week-nav">
-      <a href="{{ prev_week_url }}" class="week-nav-btn">‹ Prev</a>
-      <div>
-        <div class="week-nav-label">{{ week_label }}</div>
-        <div class="week-nav-sub">{{ week_sub_label }}</div>
-      </div>
-      <a href="{{ next_week_url }}" class="week-nav-btn">Next ›</a>
-    </div>
 
     <!-- Day Blocks -->
     {% for day in week_days %}
@@ -37,6 +28,17 @@
         </span>
         <div class="day-header-actions">
           <a href="/day/{{ day.full_name }}" class="btn-small">Edit</a>
+          <!-- small up/down arrows to swap this day's meals with neighbour days -->
+          {% if not loop.first %}
+          <form action="/week/swap/{{ day.full_name }}/up" method="POST" style="display:inline;">
+            <button class="btn-small" type="submit">↑</button>
+          </form>
+          {% endif %}
+          {% if not loop.last %}
+          <form action="/week/swap/{{ day.full_name }}/down" method="POST" style="display:inline;">
+            <button class="btn-small" type="submit">↓</button>
+          </form>
+          {% endif %}
           <form action="/delete-day/{{ day.full_name }}" method="POST"
                 style="display:inline;"
                 onsubmit="return confirm('Delete all meals for {{ day.name }}?')">
@@ -96,16 +98,20 @@
             onsubmit="return confirm('Delete the entire week plan?')">
         <button class="btn-black-full" type="submit">Delete Week Plan</button>
       </form>
-      <a href="/grocery/new" class="btn-outline-full">+ New Grocery List</a>
     </div>
 
   </div>
 
+</div><!-- end scroll-area -->
+
   <!-- Bottom Nav -->
   <nav class="bottom-nav">
-    <a href="/"     class="nav-tab">Home</a>
+    <a href="/" class="nav-tab">Home</a>
     <a href="/week" class="nav-tab active">Week</a>
-    <a href="/day/{{ today_weekday }}" class="nav-tab">Day</a>
+    <a href="/day" class="nav-tab">Day</a>
+    <a href="/grocery-list" class="nav-tab">Grocery</a>
+    <a href="/grocery-history" class="nav-tab">History</a>
+    <a href="/logout" class="nav-tab">Logout</a>
   </nav>
 
 </body>

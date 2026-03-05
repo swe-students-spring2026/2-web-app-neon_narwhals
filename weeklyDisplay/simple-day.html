@@ -4,155 +4,115 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=393, initial-scale=1.0" />
   <title>MealPrep – Day</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="day.css" />
+  <!-- base styles (status bar, shared bottom nav, etc.) -->
+  <link rel="stylesheet" href="/static/styles.css" />
+  <!-- week-specific layout on top of the shared styles -->
+  <link rel="stylesheet" href="/static/week.css" />
 </head>
 <body>
 
   <div class="status-bar">
-    <span>9:41</span> 
-    <span>●●●</span>
+    <span>9:41</span>
   </div>
 
   <div class="page-header">Day View</div>
 
+  <div class="day-summary">
+    Total Calories: {{ calories }} cal
+  </div>
+
   <div class="content">
 
-    <!-- Day Navigation -->
-    <div class="day-nav">
-      <a href="/day/{{ prev_weekday }}" class="day-nav-btn">‹ Prev</a>
-      <div class="day-nav-center">
-        <div class="day-nav-label">{{ weekday_display }}</div>
-        <div class="day-nav-sub">{{ date_label }}</div>
-      </div>
-      <a href="/day/{{ next_weekday }}" class="day-nav-btn">Next ›</a>
-    </div>
-
-    <!-- Daily Macro Summary -->
-    <div class="summary-row">
-      <div class="summary-cell">
-        <div class="s-label">Protein</div>
-        <div class="s-val">{{ protein }}g</div>
-      </div>
-      <div class="summary-cell">
-        <div class="s-label">Carbs</div>
-        <div class="s-val">{{ carbs }}g</div>
-      </div>
-      <div class="summary-cell">
-        <div class="s-label">Fiber</div>
-        <div class="s-val">{{ fiber }}g</div>
-      </div>
-      <div class="summary-cell">
-        <div class="s-label">Sugar</div>
-        <div class="s-val">{{ sugar }}g</div>
-      </div>
-    </div>
-
-    <!-- ── BREAKFAST ── -->
-    <div class="meal-section">
-      <div class="meal-section-header">
-        <div class="meal-section-title">Breakfast</div>
-        <form action="/delete-meal/{{ weekday }}/breakfast" method="POST" style="display:inline;">
-          <button class="btn-small" type="submit">Delete Meal</button>
-        </form>
-      </div>
-
-      {% for food in meals.breakfast %}
-      <div class="food-item-row">
-        <div class="food-name">{{ food.name | title }}</div>
-        <div class="food-amount">{{ food.food_amount }}{{ food.food_unit }}</div>
-        <div class="food-actions">
-          <a href="/edit/{{ food._id }}" class="btn-tiny-outline">Edit</a>
-          <form action="/delete/{{ food._id }}" method="POST" style="display:inline;">
-            <button class="btn-tiny" type="submit">Remove</button>
+    <div class="day-block">
+      <div class="day-header">
+        <span class="day-name">
+          {{ weekday_display }}
+        </span>
+        <div class="day-header-actions">
+          <form action="/delete-day/{{ weekday }}" method="POST"
+                style="display:inline;"
+                onsubmit="return confirm('Delete all meals for {{ weekday_display }}?')">
+            <button class="btn-small" type="submit">Delete</button>
           </form>
         </div>
       </div>
-      {% else %}
-      <div class="empty-meal-msg">No breakfast items</div>
-      {% endfor %}
 
-      <div class="add-item-row">
-        <a href="/add-item?weekday={{ weekday }}&meal=breakfast" class="add-item-btn">+ Add Item</a>
+    <!-- ── BREAKFAST ── -->
+    {% set bf_calories = meals.breakfast | sum(attribute='calorie_amount') %}
+    <div class="meal-row">
+      <div class="meal-header">
+        <div class="meal-type">Breakfast</div>
+        <div class="meal-calories">{{ bf_calories }} cal</div>
+      </div>
+      <div class="meal-items">
+        {% for food in meals.breakfast %}
+          <div class="food-item">
+            {{ food.name | title }} ({{ food.food_amount }}g)
+            {% if not food.get('is_generated', False) %}
+            <form action="/delete-by-content/{{ food.name }}/{{ weekday }}/breakfast" method="POST" style="display:inline;">
+              <button class="btn-small" type="submit" onclick="return confirm('Delete {{ food.name }}?')">×</button>
+            </form>
+            {% endif %}
+          </div>
+        {% endfor %}
       </div>
     </div>
 
     <!-- ── LUNCH ── -->
-    <div class="meal-section">
-      <div class="meal-section-header">
-        <div class="meal-section-title">Lunch</div>
-        <form action="/delete-meal/{{ weekday }}/lunch" method="POST" style="display:inline;">
-          <button class="btn-small" type="submit">Delete Meal</button>
-        </form>
+    {% set ln_calories = meals.lunch | sum(attribute='calorie_amount') %}
+    <div class="meal-row">
+      <div class="meal-header">
+        <div class="meal-type">Lunch</div>
+        <div class="meal-calories">{{ ln_calories }} cal</div>
       </div>
-
-      {% for food in meals.lunch %}
-      <div class="food-item-row">
-        <div class="food-name">{{ food.name | title }}</div>
-        <div class="food-amount">{{ food.food_amount }}{{ food.food_unit }}</div>
-        <div class="food-actions">
-          <a href="/edit/{{ food._id }}" class="btn-tiny-outline">Edit</a>
-          <form action="/delete/{{ food._id }}" method="POST" style="display:inline;">
-            <button class="btn-tiny" type="submit">Remove</button>
-          </form>
-        </div>
-      </div>
-      {% else %}
-      <div class="empty-meal-msg">No lunch items</div>
-      {% endfor %}
-
-      <div class="add-item-row">
-        <a href="/add-item?weekday={{ weekday }}&meal=lunch" class="add-item-btn">+ Add Item</a>
+      <div class="meal-items">
+        {% for food in meals.lunch %}
+          <div class="food-item">
+            {{ food.name | title }} ({{ food.food_amount }}g)
+            {% if not food.get('is_generated', False) %}
+            <form action="/delete-by-content/{{ food.name }}/{{ weekday }}/lunch" method="POST" style="display:inline;">
+              <button class="btn-small" type="submit" onclick="return confirm('Delete {{ food.name }}?')">×</button>
+            </form>
+            {% endif %}
+          </div>
+        {% endfor %}
       </div>
     </div>
 
     <!-- ── DINNER ── -->
-    <div class="meal-section">
-      <div class="meal-section-header">
-        <div class="meal-section-title">Dinner</div>
-        <form action="/delete-meal/{{ weekday }}/dinner" method="POST" style="display:inline;">
-          <button class="btn-small" type="submit">Delete Meal</button>
-        </form>
+    {% set dn_calories = meals.dinner | sum(attribute='calorie_amount') %}
+    <div class="meal-row">
+      <div class="meal-header">
+        <div class="meal-type">Dinner</div>
+        <div class="meal-calories">{{ dn_calories }} cal</div>
       </div>
-
-      {% for food in meals.dinner %}
-      <div class="food-item-row">
-        <div class="food-name">{{ food.name | title }}</div>
-        <div class="food-amount">{{ food.food_amount }}{{ food.food_unit }}</div>
-        <div class="food-actions">
-          <a href="/edit/{{ food._id }}" class="btn-tiny-outline">Edit</a>
-          <form action="/delete/{{ food._id }}" method="POST" style="display:inline;">
-            <button class="btn-tiny" type="submit">Remove</button>
-          </form>
-        </div>
-      </div>
-      {% else %}
-      <div class="empty-meal-msg">No dinner items</div>
-      {% endfor %}
-
-      <div class="add-item-row">
-        <a href="/add-item?weekday={{ weekday }}&meal=dinner" class="add-item-btn">+ Add Item</a>
+      <div class="meal-items">
+        {% for food in meals.dinner %}
+          <div class="food-item">
+            {{ food.name | title }} ({{ food.food_amount }}g)
+            {% if not food.get('is_generated', False) %}
+            <form action="/delete-by-content/{{ food.name }}/{{ weekday }}/dinner" method="POST" style="display:inline;">
+              <button class="btn-small" type="submit" onclick="return confirm('Delete {{ food.name }}?')">×</button>
+            </form>
+            {% endif %}
+          </div>
+        {% endfor %}
       </div>
     </div>
 
-    <!-- Bottom Actions -->
-    <div class="bottom-actions">
-      <form action="/swap-day/{{ weekday }}" method="POST">
-        <button class="btn-black-full" type="submit">Swap Day's Meals</button>
-      </form>
-      <form action="/delete-day/{{ weekday }}" method="POST"
-            onsubmit="return confirm('Delete all meals for {{ weekday_display }}?')">
-        <button class="btn-outline-full" type="submit">Delete Day Plan</button>
-      </form>
     </div>
 
   </div>
 
+</div><!-- end scroll-area -->
+
   <!-- Bottom Nav -->
   <nav class="bottom-nav">
-    <a href="/"    class="nav-tab">Home</a>
     <a href="/week" class="nav-tab">Week</a>
-    <a href="/day/{{ today_weekday }}" class="nav-tab active">Day</a>
+    <a href="/day" class="nav-tab active">Day</a>
+    <a href="/grocery-list" class="nav-tab">Grocery</a>
+    <a href="/grocery-history" class="nav-tab">History</a>
+    <a href="/logout" class="nav-tab">Logout</a>
   </nav>
 
 </body>
